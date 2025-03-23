@@ -1,0 +1,99 @@
+:root {
+  --general-font: 'Nunito Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --primary-color: #4a90e2;
+  --secondary-color: #a088f9;
+  --accent-color: #d4af37;
+  --text-color: #5c5c5c;
+  --primary-contrast-color: #f8f8f8;
+  --secondary-contrast-color: #d3d3d3;
+  --background-color: #eeeeee;
+  --error-color: red;
+  --warning-color: orange;
+  --success-color: green;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+}
+
+.hidden-button {
+  background-color: transparent;
+  cursor: pointer;
+  border: 0;
+  display: flex;
+}
+
+.hfl-field {
+  display: flex;
+  padding: 0.5rem;
+  border: 1px solid var(--primary-contrast-color);
+  background-color: var(--primary-contrast-color);
+  color: var(--text-color);
+  border-radius: 0.25rem;
+  outline: none;
+  width: 100%;
+}
+
+.hfl-field::placeholder {
+  color: var(--text-color);
+}
+
+* {
+  box-sizing: border-box;
+  font-family: var(--general-font);
+  color: var(--text-color);
+}
+
+.hfl-a {
+  color: var(--secondary-color) !important;
+  text-decoration: none;
+}
+
+.hfl-button {
+  cursor: pointer;
+  border: 0;
+  border-radius: 2em;
+  font-weight: 700;
+  font-family: var(--general-font);
+  display: flex;
+}
+
+.hfl-hr {
+  width: 100%;
+  border: 0.2px solid var(--text-color);
+  margin: 15px 0 15px 0;
+}
+
+.popup {
+  display: flex;
+  background-color: var(--primary-color);
+  align-items: center;
+  flex-direction: column;
+  border-radius: 16px;
+  max-width: 60%;
+  padding: 20px;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  text-align: center;
+  gap: 20px;
+
+  & > h2,
+  h4 {
+    color: var(--primary-contrast-color);
+  }
+}
