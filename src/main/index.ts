@@ -1,33 +1,44 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, screen } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { trackActiveWindow } from './tracking'
+import { endTracking, startTracking } from './tracking'
+import { MainToRendererChannel, RendererToMainChannel } from './entities'
 
-let mainWindow
-let interval
+let mainWindow: BrowserWindow
 
-function createWindow(): void {
+const createWindow = (): void => {
+  let display = screen.getPrimaryDisplay()
+
+  let screenWidth = display.workAreaSize.width
+  let screenHeight = display.workAreaSize.height
+
+  const width = 300
+  const height = 400
+
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    alwaysOnTop: true,
+    width,
+    height,
     show: false,
-    autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
-      nodeIntegration: false, // Disable nodeIntegration
-      contextIsolation: true, // Enable contextIsolation
+      nodeIntegration: true,
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
-    }
+    },
+    x: process.platform !== 'linux' ? screenWidth - width : undefined,
+    y: process.platform !== 'linux' ? screenHeight - height : undefined
   })
 
   mainWindow
     .loadFile(join(__dirname, 'index.html'))
     // Send the application version to the render
     .then(() => {
-      mainWindow.webContents.send('appVersion', app.getVersion())
+      const version = app.getVersion()
+      const event: MainToRendererChannel = 'app-version'
+      mainWindow.webContents.send(event, version)
     })
 
   mainWindow.on('ready-to-show', () => {
@@ -62,15 +73,15 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  // IPC Renderer to Main Calls
+  const event1: RendererToMainChannel = 'start-tracking'
+  ipcMain.handle(event1, () => {
+    startTracking(mainWindow)
+  })
+  const event2: RendererToMainChannel = 'stop-tracking'
+  ipcMain.handle(event2, endTracking)
 
   createWindow()
-
-  interval = setInterval(async () => {
-    const tracking = await trackActiveWindow()
-    mainWindow.webContents.send('window-info', tracking)
-  }, 1000)
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
@@ -84,9 +95,12 @@ app.whenReady().then(() => {
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    clearInterval(interval)
     app.quit()
   }
+})
+
+app.on('quit', () => {
+  endTracking()
 })
 
 // In this file you can include the rest of your app's specific main process

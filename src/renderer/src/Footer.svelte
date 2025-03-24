@@ -4,6 +4,11 @@
 
   let ready = $state(false)
 
+  let version = $state('')
+  window.api.getVersion((_, ver) => {
+    version = ver
+  })
+
   onMount(() => (ready = true))
 </script>
 
@@ -14,7 +19,7 @@
     }}
   >
     <div>
-      <small>0</small>
+      <small>{version}</small>
     </div>
     <div class="right-stuff">
       <small

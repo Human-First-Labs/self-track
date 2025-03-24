@@ -1,28 +1,55 @@
 import { execSync } from 'child_process'
+import { ActiveWindowInfo, MainToRendererChannel } from './entities'
+import { createHash } from 'crypto'
 import os from 'os'
+import fs from 'fs'
 
-export interface ActiveWindowInfo {
-  title: string
-  executable: string
-  className: string
+let interval
+
+export const startTracking = (mainWindow: any) => {
+  interval = setInterval(async () => {
+    const tracking = await trackActiveWindow()
+    const event: MainToRendererChannel = 'window-info'
+    mainWindow.webContents.send(event, tracking)
+  }, 1000)
 }
 
-export const trackActiveWindow = async (): Promise<ActiveWindowInfo | undefined> => {
+export const endTracking = () => {
+  clearInterval(interval)
+}
+
+const trackActiveWindow = async (): Promise<ActiveWindowInfo> => {
   const platform = os.platform()
+
+  let activeWindowInfo: Omit<ActiveWindowInfo, 'id'> | undefined
   if (platform === 'win32') {
-    return await trackActiveWindow_Windows()
+    activeWindowInfo = await trackActiveWindow_Windows()
   }
   if (platform === 'darwin') {
-    return trackActiveWindow_Mac()
+    activeWindowInfo = trackActiveWindow_Mac()
   }
   if (platform === 'linux') {
-    return trackActiveWindow_Linux()
+    activeWindowInfo = trackActiveWindow_Linux()
   } else {
     throw new Error('Unsupported OS')
   }
+
+  if (!activeWindowInfo) {
+    throw new Error('Error getting active window info')
+  }
+
+  const id = createHash('md5').update(JSON.stringify(activeWindowInfo)).digest('hex')
+
+  console.log(activeWindowInfo.allData)
+
+  //ignore
+  // @ts-ignore
+  delete activeWindowInfo.allData
+
+  return { ...activeWindowInfo, id }
 }
 
-const trackActiveWindow_Windows = async (): Promise<ActiveWindowInfo | undefined> => {
+const trackActiveWindow_Windows = async (): Promise<Omit<ActiveWindowInfo, 'id'> | undefined> => {
   try {
     const winax = await import('winax')
     const shell = new winax.Object('Shell.Application')
@@ -32,17 +59,18 @@ const trackActiveWindow_Windows = async (): Promise<ActiveWindowInfo | undefined
       activeWindow.Document?.Application.Path ||
       'Unknown'
     if (activeWindow) {
-      console.log(activeWindow)
-
       return {
         title: activeWindow.LocationName,
         executable: activeWindow.FullName,
-        className
+        className,
+        allData: JSON.stringify(activeWindow)
       }
     }
   } catch (error) {
-    console.error('Error getting active window info using winax:', error)
-    return null
+    const errorMessage = 'Error getting active window info: ' + error
+    console.error(errorMessage)
+    fs.writeFileSync('error.txt', errorMessage)
+    return undefined
   }
   return
 }
@@ -53,8 +81,11 @@ const trackActiveWindow_Mac = (): undefined => {
   //TODO to be implemented
 }
 
-const trackActiveWindow_Linux = (): ActiveWindowInfo | undefined => {
+const trackActiveWindow_Linux = (): Omit<ActiveWindowInfo, 'id'> | undefined => {
   try {
+    const allData = execSync(`xprop -id $(xprop -root _NET_ACTIVE_WINDOW | awk '{print $5}')`)
+      .toString()
+      .trim()
     const windowId = execSync("xprop -root _NET_ACTIVE_WINDOW | awk '{print $5}'").toString().trim()
     const title = execSync(`xprop -id ${windowId} _NET_WM_NAME | awk -F\\" '{print $2}'`)
       .toString()
@@ -65,9 +96,11 @@ const trackActiveWindow_Linux = (): ActiveWindowInfo | undefined => {
     const pid = execSync(`xprop -id ${windowId} _NET_WM_PID | awk '{print $3}'`).toString().trim()
     const executable = execSync(`ps -p ${pid} -o comm=`).toString().trim()
 
-    return { title, executable, className }
+    return { title, executable, className, allData }
   } catch (error) {
-    console.error('Error getting active window info:', error)
-    return null
+    const errorMessage = 'Error getting active window info: ' + error
+    console.error(errorMessage)
+    fs.writeFileSync('error.txt', errorMessage)
+    return undefined
   }
 }

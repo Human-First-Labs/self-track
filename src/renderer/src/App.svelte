@@ -1,13 +1,168 @@
 <script lang="ts">
   import './toolkit/default-hfl.css'
   import Footer from './Footer.svelte'
+  import type { ActivityPeriod, ActiveWindowInfo } from '../../main/entities'
+  import { slide } from 'svelte/transition'
+  import { DateTime } from 'luxon'
 
-  let info = $state('')
+  let passedActivities = $state<ActivityPeriod[]>([])
+  let currentActivity = $state<ActivityPeriod | undefined>()
+  let recording = $state(false)
+
+  // $inspect(currentActivity)
+  // $inspect(passedActivities)
+
+  const handleNewActivityInfo = (activityInfo: ActiveWindowInfo) => {
+    // console.log('allData', activityInfo)
+
+    delete activityInfo.allData
+
+    if (currentActivity?.id === activityInfo.id) {
+      currentActivity.end = DateTime.now().toMillis()
+    } else {
+      if (currentActivity) {
+        passedActivities = [
+          ...passedActivities,
+          {
+            ...currentActivity,
+            end: DateTime.now().toMillis()
+          }
+        ]
+      }
+
+      currentActivity = {
+        start: DateTime.now().toMillis(),
+        end: DateTime.now().toMillis(),
+        ...activityInfo
+      }
+    }
+  }
+
+  const toggleRecording = () => {
+    recording = !recording
+
+    if (!recording) {
+      window.api.stopTracking()
+      passedActivities = [
+        ...passedActivities,
+        {
+          ...currentActivity,
+          end: DateTime.now().toMillis()
+        }
+      ]
+    } else {
+      window.api.startTracking()
+    }
+  }
 
   window.api.onWindowInfo((_, windowInfo) => {
-    info = `${JSON.stringify(windowInfo)}`
+    handleNewActivityInfo(windowInfo)
   })
 </script>
 
-<div id="windowInfo">{info}</div>
+<div class="column center">
+  <button class="hfl-button" onclick={toggleRecording}
+    >{recording ? 'Stop' : 'Start'} Recording!</button
+  >
+  {#if recording && currentActivity?.id}
+    <div class="current" in:slide={{ axis: 'y' }} out:slide={{ axis: 'y' }}>
+      <h5>Current Activity:</h5>
+      <div class="row">
+        <strong>Title:</strong>
+        <p>{currentActivity.title}</p>
+      </div>
+      <div class="row">
+        <strong>Program:</strong>
+        <p>{currentActivity.executable}</p>
+      </div>
+      <div class="row">
+        <strong>Detail:</strong>
+        <p>{currentActivity.className}</p>
+      </div>
+      <div class="row">
+        <strong>Start:</strong>
+        <p>
+          {DateTime.fromMillis(currentActivity.start).toFormat('yy/MM/dd HH:mm')}
+        </p>
+      </div>
+      <div class="row">
+        <strong>Duration:</strong>
+        <p>
+          {DateTime.fromMillis(currentActivity.end)
+            .diff(DateTime.fromMillis(currentActivity.start))
+            .shiftTo('hours', 'minutes', 'seconds')
+            .toHuman({
+              maximumFractionDigits: 0,
+              roundingIncrement: 1
+            })}
+        </p>
+      </div>
+    </div>
+  {/if}
+  <!-- <div class="container history">
+    <h5>History:</h5>
+    <ul>
+      {#each passedActivities as activity}
+        <li>
+          <ul>
+            <li>Id: {activity.id}</li>
+            <li>Title: {activity.title}</li>
+            <li>Program: {activity.executable}</li>
+            <li>Detail: {activity.className}</li>
+            <li>
+              Start: {DateTime.fromMillis(activity.start).toFormat('yy/MM/dd HH:mm')}
+            </li>
+            <li>End: {DateTime.fromMillis(activity.end).toFormat('yy/MM/dd HH:mm')}</li>
+            <li>
+              Duration: {DateTime.fromMillis(activity.end)
+                .diff(DateTime.fromMillis(activity.start))
+                .shiftTo('hours', 'minutes', 'seconds')
+                .toHuman({
+                  maximumFractionDigits: 0,
+                  roundingIncrement: 1
+                })}
+            </li>
+          </ul>
+          <hr />
+        </li>
+      {/each}
+    </ul>
+  </div> -->
+</div>
 <Footer />
+
+<style>
+  .column {
+    flex: 1;
+    flex-wrap: nowrap;
+  }
+
+  .hfl-button {
+    padding: 20px;
+  }
+
+  .center {
+    align-items: center;
+    justify-content: center;
+    margin: 10px;
+  }
+
+  .current {
+    display: flex;
+    flex-direction: column;
+  }
+
+  p {
+    flex: 1;
+    margin: 0;
+  }
+
+  strong {
+    flex: 0.4;
+  }
+
+  /* .history {
+    max-height: 300px;
+    overflow-y: auto;
+  } */
+</style>

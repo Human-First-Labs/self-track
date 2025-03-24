@@ -1,14 +1,25 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import { MainToRendererChannel, RendererToMainChannel } from '../main/entities'
 
 // Custom APIs for renderer
 const api = {
   // From main to render
   getVersion: (listener): void => {
-    ipcRenderer.on('appVersion', listener)
+    const event: MainToRendererChannel = 'app-version'
+    ipcRenderer.on(event, listener)
   },
   onWindowInfo: (callback): void => {
-    ipcRenderer.on('window-info', callback)
+    const event: MainToRendererChannel = 'window-info'
+    ipcRenderer.on(event, callback)
+  },
+  startTracking: (): void => {
+    const event: RendererToMainChannel = 'start-tracking'
+    ipcRenderer.invoke(event)
+  },
+  stopTracking: (): void => {
+    const event: RendererToMainChannel = 'stop-tracking'
+    ipcRenderer.invoke(event)
   }
 }
 
