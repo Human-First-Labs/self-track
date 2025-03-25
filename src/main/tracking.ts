@@ -14,6 +14,7 @@ interface WindowsPrepWork {
   OpenProcess: KoffiFunction
   QueryFullProcessImageNameA: KoffiFunction
   CloseHandle: KoffiFunction
+  GetLastError: KoffiFunction
 }
 
 export const resetForOs = (): void => {
@@ -66,6 +67,9 @@ const prepForOs_Windows = (): WindowsPrepWork => {
   const QueryFullProcessImageNameA = kernel32.func(
     'int QueryFullProcessImageNameA(HANDLE hProcess, DWORD dwFlags, _Out_ uint8_t *lpExeName, int lpdwSize)'
   )
+
+  const GetLastError = kernel32.func('DWORD GetLastError()')
+
   const CloseHandle = kernel32.func('int CloseHandle(HANDLE hObject)')
 
   return {
@@ -75,6 +79,7 @@ const prepForOs_Windows = (): WindowsPrepWork => {
     GetClassNameA,
     OpenProcess,
     QueryFullProcessImageNameA,
+    GetLastError,
     CloseHandle
   }
 }
@@ -118,7 +123,8 @@ const trackActiveWindow_Windows = (
     GetWindowTextA,
     GetClassNameA,
     OpenProcess,
-    QueryFullProcessImageNameA,
+    // QueryFullProcessImageNameA,
+    // GetLastError,
     CloseHandle
   } = args
 
@@ -126,13 +132,8 @@ const trackActiveWindow_Windows = (
     // Constants
     const PROCESS_QUERY_INFORMATION = 0x0400
     const PROCESS_VM_READ = 0x0010
-    // const MAX_PATH = 1024;
-    // const BUFFER_SIZE = 256;
 
-    // Get the active window handle
-    // const hwndPtr = koffi.alloc(HWND, BUFFER_SIZE);  // Allocate with type and initial value
     const hwnd = GetForegroundWindow()
-    // hwndPtr.write(hwnd);
 
     if (!hwnd || hwnd.address === 0) {
       console.warn('No foreground window found')
@@ -140,7 +141,7 @@ const trackActiveWindow_Windows = (
     }
 
     // Get window title
-    const buf = Buffer.allocUnsafe(1024)
+    const buf = Buffer.alloc(1024)
     const titleLength = GetWindowTextA(hwnd, buf, buf.length)
     if (!titleLength) {
       // Maybe the process ended in-between?
@@ -158,7 +159,7 @@ const trackActiveWindow_Windows = (
     const pid = ptr[0]
 
     // Get window class name
-    const buf2 = Buffer.allocUnsafe(1024)
+    const buf2 = Buffer.alloc(1024)
     const classNameLength = GetClassNameA(hwnd, buf2, buf2.length)
     if (!classNameLength) {
       // Maybe the process ended in-between?
@@ -173,15 +174,25 @@ const trackActiveWindow_Windows = (
       throw new Error(`Failed to open process for PID: ${pid}`)
     }
 
-    // // Get executable path
-    // let buf3 = Buffer.allocUnsafe(1024);
-    // const executableLength = QueryFullProcessImageNameA(processHandle, 0, buf3, buf3.length);
-    // if (!executableLength) {
-    //   // Maybe the process ended in-between?
-    //   throw new Error('Window Stopped somehow')
-    // }
-    // const executable = koffi.decode(buf3, 'char', executableLength);
 
+
+    // try{
+    //   // Get executable path
+    //   let buf3 = Buffer.alloc(1024);
+    //   const executableLength = QueryFullProcessImageNameA(processHandle, 0, buf3, buf3.length);
+    //   if (!executableLength) {
+    //     // Maybe the process ended in-between?
+    //     throw new Error('Window Stopped somehow')
+    //   }
+    //   const executable = koffi.decode(buf3, 'char', executableLength);
+  
+
+    // }catch(e){
+    //   console.error('boop', e)
+    //   const result = GetLastError()
+    //   console.log('test2',result )
+
+    // }
     // Close process handle
     CloseHandle(processHandle)
 
@@ -191,9 +202,12 @@ const trackActiveWindow_Windows = (
       title,
       className,
       allData: JSON.stringify({ title, pid, className })
-      // executable
+
     }
   } catch (error) {
+
+
+    
     const errorMessage = `Error getting active window info: ${error}`
     console.error(errorMessage)
 

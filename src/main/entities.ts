@@ -9,7 +9,7 @@ export type RendererToMainChannel =
 export interface ActiveWindowInfo {
   id: string //MD5 hash of all other fields apart from allData
   title: string
-  executable: string
+  executable?: string
   className: string
   allData?: string
 }
