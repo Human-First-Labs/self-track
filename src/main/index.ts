@@ -2,8 +2,8 @@ import { app, shell, BrowserWindow, ipcMain, screen } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { detectOS, endTracking, startTracking } from './tracking'
 import { MainToRendererChannel, RendererToMainChannel } from './entities'
+import { startTracking, endTracking, detectOS } from './logic'
 
 let mainWindow: BrowserWindow
 
