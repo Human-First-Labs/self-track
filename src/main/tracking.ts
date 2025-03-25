@@ -27,13 +27,12 @@ export const detectOS = () => {
 const trackActiveWindow = async (): Promise<ActiveWindowInfo> => {
   const platform = os.platform()
 
-
   let activeWindowInfo: Omit<ActiveWindowInfo, 'id'> | undefined
   if (platform === 'win32') {
     activeWindowInfo = await trackActiveWindow_Windows()
-  }else if (platform === 'darwin') {
+  } else if (platform === 'darwin') {
     activeWindowInfo = trackActiveWindow_Mac()
-  }else if (platform === 'linux') {
+  } else if (platform === 'linux') {
     activeWindowInfo = trackActiveWindow_Linux()
   } else {
     throw new Error('Unsupported OS')
@@ -56,14 +55,13 @@ const trackActiveWindow = async (): Promise<ActiveWindowInfo> => {
 
 const trackActiveWindow_Windows = async (): Promise<Omit<ActiveWindowInfo, 'id'> | undefined> => {
   try {
-    const { default: koffi} = await import('koffi')
+    const { default: koffi } = await import('koffi')
 
-    // Define the Windows API functions and data types
+    // Load Windows API libraries
     const user32 = koffi.load('user32.dll')
-
     const kernel32 = koffi.load('kernel32.dll')
 
-    // Define the Windows API function signatures
+    // Define Windows API function signatures
     const GetForegroundWindow = user32.func('HWND GetForegroundWindow()')
     const GetWindowTextW = user32.func('int GetWindowTextW(HWND, WCHAR*, int)')
     const GetWindowThreadProcessId = user32.func('DWORD GetWindowThreadProcessId(HWND, DWORD*)')
@@ -74,32 +72,47 @@ const trackActiveWindow_Windows = async (): Promise<Omit<ActiveWindowInfo, 'id'>
     )
     const CloseHandle = kernel32.func('BOOL CloseHandle(HANDLE)')
 
+    // Get the active window handle
     const hwnd = GetForegroundWindow()
     if (!hwnd) {
       throw new Error('Error getting active window info')
     }
 
+    // Get window title
     const titleBuffer = koffi.alloc('WCHAR', 256)
     const titleLength = GetWindowTextW(hwnd, titleBuffer, 256)
     const title = titleLength > 0 ? koffi.decode(titleBuffer, 'ucs2') : ''
 
+    // Get process ID
     const pidBuffer = koffi.alloc('DWORD', 1)
     GetWindowThreadProcessId(hwnd, pidBuffer)
-    const pid = pidBuffer.readUInt32LE()
+    const pid = pidBuffer.readUInt32LE(0)
 
+    // Get window class name
     const classNameBuffer = koffi.alloc('WCHAR', 256)
     const classNameLength = GetClassNameW(hwnd, classNameBuffer, 256)
     const className = classNameLength > 0 ? koffi.decode(classNameBuffer, 'ucs2') : ''
 
-    const processHandle = OpenProcess(0x1000, false, pid)
-    if (!processHandle) {
+    // Open the process
+    const PROCESS_QUERY_INFORMATION = 0x0400
+    const PROCESS_VM_READ = 0x0010
+    const processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid)
+
+    if (!processHandle || processHandle.address === 0) {
+      console.error('Failed to open process for PID:', pid)
       return { title, className, allData: JSON.stringify(hwnd), executable: '' }
     }
 
+    // Get executable path
     const exeBuffer = koffi.alloc('WCHAR', 1024)
     const exeBufferSize = koffi.alloc('DWORD', 1)
+    exeBufferSize.writeUInt32LE(1024, 0)
+
     const result = QueryFullProcessImageNameW(processHandle, 0, exeBuffer, exeBufferSize)
-    const executable = result ? koffi.decode(exeBuffer, 'ucs2') : ''
+    const exePathLength = exeBufferSize.readUInt32LE(0)
+    const executable = result ? koffi.decode(exeBuffer.slice(0, exePathLength * 2), 'ucs2') : ''
+
+    // Close process handle
     CloseHandle(processHandle)
 
     return { title, executable, className, allData: JSON.stringify(hwnd) }
@@ -109,7 +122,6 @@ const trackActiveWindow_Windows = async (): Promise<Omit<ActiveWindowInfo, 'id'>
     fs.writeFileSync('error.txt', errorMessage)
     return undefined
   }
-  return
 }
 
 const trackActiveWindow_Mac = (): undefined => {
