@@ -71,45 +71,47 @@
 </script>
 
 <div class="column center">
-  <small>Detected OS: {os}</small>
-  <button class="hfl-button" onclick={toggleRecording}
-    >{recording ? 'Stop' : 'Start'} Recording!</button
-  >
-  {#if recording && currentActivity?.id}
-    <div class="current" in:slide={{ axis: 'y' }} out:slide={{ axis: 'y' }}>
-      <h5>Current Activity:</h5>
-      <div class="row">
-        <strong>Title:</strong>
-        <p>{currentActivity.title}</p>
+  <small class="operating">Detected OS: {os}</small>
+  <div class="centering column">
+    <button class="hfl-button" onclick={toggleRecording}
+      >{recording ? 'Stop' : 'Start'} Recording!</button
+    >
+    {#if recording && currentActivity?.id}
+      <div class="current" in:slide={{ axis: 'y' }} out:slide={{ axis: 'y' }}>
+        <h5>Current Activity:</h5>
+        <div class="row">
+          <strong>Title:</strong>
+          <p>{currentActivity.title}</p>
+        </div>
+        <div class="row">
+          <strong>Program:</strong>
+          <p>{currentActivity.executable}</p>
+        </div>
+        <div class="row">
+          <strong>Detail:</strong>
+          <p>{currentActivity.className}</p>
+        </div>
+        <div class="row">
+          <strong>Start:</strong>
+          <p>
+            {DateTime.fromMillis(currentActivity.start).toFormat('yy/MM/dd HH:mm')}
+          </p>
+        </div>
+        <div class="row">
+          <strong>Duration:</strong>
+          <p>
+            {DateTime.fromMillis(currentActivity.end)
+              .diff(DateTime.fromMillis(currentActivity.start))
+              .shiftTo('hours', 'minutes', 'seconds')
+              .toHuman({
+                maximumFractionDigits: 0,
+                roundingIncrement: 1
+              })}
+          </p>
+        </div>
       </div>
-      <div class="row">
-        <strong>Program:</strong>
-        <p>{currentActivity.executable}</p>
-      </div>
-      <div class="row">
-        <strong>Detail:</strong>
-        <p>{currentActivity.className}</p>
-      </div>
-      <div class="row">
-        <strong>Start:</strong>
-        <p>
-          {DateTime.fromMillis(currentActivity.start).toFormat('yy/MM/dd HH:mm')}
-        </p>
-      </div>
-      <div class="row">
-        <strong>Duration:</strong>
-        <p>
-          {DateTime.fromMillis(currentActivity.end)
-            .diff(DateTime.fromMillis(currentActivity.start))
-            .shiftTo('hours', 'minutes', 'seconds')
-            .toHuman({
-              maximumFractionDigits: 0,
-              roundingIncrement: 1
-            })}
-        </p>
-      </div>
-    </div>
-  {/if}
+    {/if}
+  </div>
   <!-- <div class="container history">
     <h5>History:</h5>
     <ul>
@@ -156,11 +158,13 @@
     align-items: center;
     justify-content: center;
     margin: 10px;
+    flex: 1;
   }
 
   .current {
     display: flex;
     flex-direction: column;
+    width: 100%;
   }
 
   p {
@@ -169,7 +173,22 @@
   }
 
   strong {
-    flex: 0.4;
+    flex: 0.5;
+  }
+
+  .operating {
+    font-weight: bold;
+    text-align: start;
+    width: 100%;
+  }
+
+  .centering {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
   }
 
   /* .history {

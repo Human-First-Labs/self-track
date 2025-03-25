@@ -24,14 +24,10 @@
     <div>
       <small>{version}</small>
     </div>
-    <div class="right-stuff">
-      <small
-        >Built with the aid of <a
-          class="hfl-a"
-          target="_blank"
-          rel="noreferrer"
-          href="https://human-first-labs.com">Human First Labs (HFL)</a
-        ></small
+    <div class="right-stuff column">
+      <small>Built with the aid of </small>
+      <a class="hfl-a" target="_blank" rel="noreferrer" href="https://human-first-labs.com"
+        >Human First Labs (HFL)</a
       >
     </div>
   </footer>
@@ -47,7 +43,7 @@
     width: 100%;
     align-items: center;
     justify-content: space-between;
-    padding: 20px;
+    padding: 0 20px;
   }
 
   small {
@@ -56,7 +52,7 @@
 
   .right-stuff {
     display: flex;
-    align-items: center;
     justify-content: center;
+    text-align: end;
   }
 </style>
