@@ -1,6 +1,6 @@
-export type MainToRendererChannel = 'window-info' | 'app-version'
+export type MainToRendererChannel = 'send-window-info' | 'send-app-version' | 'send-os'
 
-export type RendererToMainChannel = 'start-tracking' | 'stop-tracking'
+export type RendererToMainChannel = 'start-tracking' | 'stop-tracking' | 'request-version' | 'request-os'
 
 export interface ActiveWindowInfo {
   id: string //MD5 hash of all other fields apart from allData

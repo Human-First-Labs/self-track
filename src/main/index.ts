@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain, screen } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { endTracking, startTracking } from './tracking'
+import { detectOS, endTracking, startTracking } from './tracking'
 import { MainToRendererChannel, RendererToMainChannel } from './entities'
 
 let mainWindow: BrowserWindow
@@ -35,20 +35,26 @@ const createWindow = (): void => {
   mainWindow
     .loadFile(join(__dirname, 'index.html'))
     // Send the application version to the render
-    .then(() => {
-      const version = app.getVersion()
-      const event: MainToRendererChannel = 'app-version'
-      mainWindow.webContents.send(event, version)
-    })
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
 
+  // mainWindow.on('show', () => {
+  //   //Main to Rendere Calls
+  //   const version = app.getVersion()
+  //   const event: MainToRendererChannel = 'app-version'
+  //   mainWindow.webContents.send(event, version)
+  //   const event3: MainToRendererChannel = 'check-os'
+  //   const platform = detectOS()
+  //   mainWindow.webContents.send(event3, platform)
+  // })
+
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
   })
+
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
@@ -73,14 +79,26 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC Renderer to Main Calls
+  // Renderer to Main Calls
   const event1: RendererToMainChannel = 'start-tracking'
   ipcMain.handle(event1, () => {
     startTracking(mainWindow)
   })
   const event2: RendererToMainChannel = 'stop-tracking'
   ipcMain.handle(event2, endTracking)
-
+  const event3: RendererToMainChannel = 'request-version'
+  ipcMain.handle(event3,() => {
+    const version = app.getVersion()
+      const event: MainToRendererChannel = 'send-app-version'
+      mainWindow.webContents.send(event, version)
+  })
+  const event4: RendererToMainChannel = 'request-os'
+  ipcMain.handle(event4,() => {
+      const platform = detectOS()
+      const event: MainToRendererChannel = 'send-os'
+      mainWindow.webContents.send(event, platform)
+  } )
+  
   createWindow()
 
   app.on('activate', function () {

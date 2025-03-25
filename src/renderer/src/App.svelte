@@ -4,10 +4,24 @@
   import type { ActivityPeriod, ActiveWindowInfo } from '../../main/entities'
   import { slide } from 'svelte/transition'
   import { DateTime } from 'luxon'
+  import { onMount } from 'svelte'
 
   let passedActivities = $state<ActivityPeriod[]>([])
   let currentActivity = $state<ActivityPeriod | undefined>()
   let recording = $state(false)
+
+  let os = $state('')
+
+  onMount(() => {
+    window.api.sendOS((_, currentOs) => {
+      os = currentOs
+    })
+    window.api.sendWindowInfo((_, windowInfo) => {
+      handleNewActivityInfo(windowInfo)
+    })
+
+    window.api.requestOs()
+  })
 
   // $inspect(currentActivity)
   // $inspect(passedActivities)
@@ -54,13 +68,10 @@
       window.api.startTracking()
     }
   }
-
-  window.api.onWindowInfo((_, windowInfo) => {
-    handleNewActivityInfo(windowInfo)
-  })
 </script>
 
 <div class="column center">
+  <small>Detected OS: {os}</small>
   <button class="hfl-button" onclick={toggleRecording}
     >{recording ? 'Stop' : 'Start'} Recording!</button
   >

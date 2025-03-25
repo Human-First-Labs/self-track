@@ -9,7 +9,7 @@ let interval
 export const startTracking = (mainWindow: any) => {
   interval = setInterval(async () => {
     const tracking = await trackActiveWindow()
-    const event: MainToRendererChannel = 'window-info'
+    const event: MainToRendererChannel = 'send-window-info'
     mainWindow.webContents.send(event, tracking)
   }, 1000)
 }
@@ -18,17 +18,22 @@ export const endTracking = () => {
   clearInterval(interval)
 }
 
+export const detectOS = () => {
+  const platform = os.platform()
+
+  return platform
+}
+
 const trackActiveWindow = async (): Promise<ActiveWindowInfo> => {
   const platform = os.platform()
+
 
   let activeWindowInfo: Omit<ActiveWindowInfo, 'id'> | undefined
   if (platform === 'win32') {
     activeWindowInfo = await trackActiveWindow_Windows()
-  }
-  if (platform === 'darwin') {
+  }else if (platform === 'darwin') {
     activeWindowInfo = trackActiveWindow_Mac()
-  }
-  if (platform === 'linux') {
+  }else if (platform === 'linux') {
     activeWindowInfo = trackActiveWindow_Linux()
   } else {
     throw new Error('Unsupported OS')
@@ -51,7 +56,7 @@ const trackActiveWindow = async (): Promise<ActiveWindowInfo> => {
 
 const trackActiveWindow_Windows = async (): Promise<Omit<ActiveWindowInfo, 'id'> | undefined> => {
   try {
-    const koffi = await import('koffi')
+    const { default: koffi} = await import('koffi')
 
     // Define the Windows API functions and data types
     const user32 = koffi.load('user32.dll')

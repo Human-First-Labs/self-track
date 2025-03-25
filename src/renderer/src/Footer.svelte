@@ -5,11 +5,14 @@
   let ready = $state(false)
 
   let version = $state('')
-  window.api.getVersion((_, ver) => {
-    version = ver
-  })
 
-  onMount(() => (ready = true))
+  onMount(() => {
+    window.api.sendVersion((_, ver) => {
+      version = ver
+      ready = true
+    })
+    window.api.requestVersion()
+  })
 </script>
 
 {#if ready}
