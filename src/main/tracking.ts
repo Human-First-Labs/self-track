@@ -51,21 +51,53 @@ const trackActiveWindow = async (): Promise<ActiveWindowInfo> => {
 
 const trackActiveWindow_Windows = async (): Promise<Omit<ActiveWindowInfo, 'id'> | undefined> => {
   try {
-    const winax = await import('winax')
-    const shell = new winax.Object('Shell.Application')
-    const activeWindow = shell.Windows().Item(shell.Windows().Count - 1)
-    const className =
-      activeWindow.Document?.Application?.Name ||
-      activeWindow.Document?.Application.Path ||
-      'Unknown'
-    if (activeWindow) {
-      return {
-        title: activeWindow.LocationName,
-        executable: activeWindow.FullName,
-        className,
-        allData: JSON.stringify(activeWindow)
-      }
+    const koffi = await import('koffi')
+
+    // Define the Windows API functions and data types
+    const user32 = koffi.load('user32.dll')
+
+    const kernel32 = koffi.load('kernel32.dll')
+
+    // Define the Windows API function signatures
+    const GetForegroundWindow = user32.func('HWND GetForegroundWindow()')
+    const GetWindowTextW = user32.func('int GetWindowTextW(HWND, WCHAR*, int)')
+    const GetWindowThreadProcessId = user32.func('DWORD GetWindowThreadProcessId(HWND, DWORD*)')
+    const GetClassNameW = user32.func('int GetClassNameW(HWND, WCHAR*, int)')
+    const OpenProcess = kernel32.func('HANDLE OpenProcess(DWORD, BOOL, DWORD)')
+    const QueryFullProcessImageNameW = kernel32.func(
+      'BOOL QueryFullProcessImageNameW(HANDLE, DWORD, WCHAR*, DWORD*)'
+    )
+    const CloseHandle = kernel32.func('BOOL CloseHandle(HANDLE)')
+
+    const hwnd = GetForegroundWindow()
+    if (!hwnd) {
+      throw new Error('Error getting active window info')
     }
+
+    const titleBuffer = koffi.alloc('WCHAR', 256)
+    const titleLength = GetWindowTextW(hwnd, titleBuffer, 256)
+    const title = titleLength > 0 ? koffi.decode(titleBuffer, 'ucs2') : ''
+
+    const pidBuffer = koffi.alloc('DWORD', 1)
+    GetWindowThreadProcessId(hwnd, pidBuffer)
+    const pid = pidBuffer.readUInt32LE()
+
+    const classNameBuffer = koffi.alloc('WCHAR', 256)
+    const classNameLength = GetClassNameW(hwnd, classNameBuffer, 256)
+    const className = classNameLength > 0 ? koffi.decode(classNameBuffer, 'ucs2') : ''
+
+    const processHandle = OpenProcess(0x1000, false, pid)
+    if (!processHandle) {
+      return { title, className, allData: JSON.stringify(hwnd), executable: '' }
+    }
+
+    const exeBuffer = koffi.alloc('WCHAR', 1024)
+    const exeBufferSize = koffi.alloc('DWORD', 1)
+    const result = QueryFullProcessImageNameW(processHandle, 0, exeBuffer, exeBufferSize)
+    const executable = result ? koffi.decode(exeBuffer, 'ucs2') : ''
+    CloseHandle(processHandle)
+
+    return { title, executable, className, allData: JSON.stringify(hwnd) }
   } catch (error) {
     const errorMessage = 'Error getting active window info: ' + error
     console.error(errorMessage)
