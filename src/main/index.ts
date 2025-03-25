@@ -8,10 +8,10 @@ import { startTracking, endTracking, detectOS } from './logic'
 let mainWindow: BrowserWindow
 
 const createWindow = (): void => {
-  let display = screen.getPrimaryDisplay()
+  const display = screen.getPrimaryDisplay()
 
-  let screenWidth = display.workAreaSize.width
-  let screenHeight = display.workAreaSize.height
+  const screenWidth = display.workAreaSize.width
+  const screenHeight = display.workAreaSize.height
 
   const width = 300
   const height = 400
@@ -32,9 +32,8 @@ const createWindow = (): void => {
     y: process.platform !== 'linux' ? screenHeight - height : undefined
   })
 
-  mainWindow
-    .loadFile(join(__dirname, 'index.html'))
-    // Send the application version to the render
+  mainWindow.loadFile(join(__dirname, 'index.html'))
+  // Send the application version to the render
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
@@ -54,7 +53,6 @@ const createWindow = (): void => {
     shell.openExternal(details.url)
     return { action: 'deny' }
   })
-
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
@@ -87,18 +85,18 @@ app.whenReady().then(() => {
   const event2: RendererToMainChannel = 'stop-tracking'
   ipcMain.handle(event2, endTracking)
   const event3: RendererToMainChannel = 'request-version'
-  ipcMain.handle(event3,() => {
+  ipcMain.handle(event3, () => {
     const version = app.getVersion()
-      const event: MainToRendererChannel = 'send-app-version'
-      mainWindow.webContents.send(event, version)
+    const event: MainToRendererChannel = 'send-app-version'
+    mainWindow.webContents.send(event, version)
   })
   const event4: RendererToMainChannel = 'request-os'
-  ipcMain.handle(event4,() => {
-      const platform = detectOS()
-      const event: MainToRendererChannel = 'send-os'
-      mainWindow.webContents.send(event, platform)
-  } )
-  
+  ipcMain.handle(event4, () => {
+    const platform = detectOS()
+    const event: MainToRendererChannel = 'send-os'
+    mainWindow.webContents.send(event, platform)
+  })
+
   createWindow()
 
   app.on('activate', function () {

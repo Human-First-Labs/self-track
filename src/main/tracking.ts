@@ -5,7 +5,7 @@ import os from 'os'
 import fs from 'fs'
 import koffi, { KoffiFunction } from 'koffi'
 
-interface WindowsPrepWork{
+interface WindowsPrepWork {
   //TODO all the functions used by Windows
   GetForegroundWindow: KoffiFunction
   GetWindowThreadProcessId: KoffiFunction
@@ -16,71 +16,75 @@ interface WindowsPrepWork{
   CloseHandle: KoffiFunction
 }
 
-export const resetForOs = () => {
+export const resetForOs = (): void => {
   const platform = os.platform()
 
-  if(platform === 'win32'){
+  if (platform === 'win32') {
     resetForOs_Windows()
   }
 }
 
-const resetForOs_Windows  = () => {
-
+const resetForOs_Windows = (): void => {
   koffi.reset()
-
 }
 
-export const prepForOs = () => {
+export const prepForOs = (): WindowsPrepWork | undefined => {
   const platform = os.platform()
 
   let setup: WindowsPrepWork | undefined = undefined
 
-  if(platform === 'win32'){
+  if (platform === 'win32') {
     setup = prepForOs_Windows()
   }
 
   return setup
-
 }
 
-const prepForOs_Windows = () => {
-  
-    // Define Windows-specific types
-    const HANDLE = koffi.pointer('HANDLE', koffi.opaque())
-    koffi.alias('HWND', HANDLE)
-    koffi.alias('DWORD', 'uint32_t')
+const prepForOs_Windows = (): WindowsPrepWork => {
+  // Define Windows-specific types
+  const HANDLE = koffi.pointer('HANDLE', koffi.opaque())
+  koffi.alias('HWND', HANDLE)
+  koffi.alias('DWORD', 'uint32_t')
 
-  
-    // Load Windows API libraries
-    const user32 = koffi.load('user32.dll');
-    const kernel32 = koffi.load('kernel32.dll');
+  // Load Windows API libraries
+  const user32 = koffi.load('user32.dll')
+  const kernel32 = koffi.load('kernel32.dll')
 
-    const GetForegroundWindow = user32.func("HWND GetForegroundWindow()");
-    const GetWindowThreadProcessId = user32.func('DWORD __stdcall GetWindowThreadProcessId(HWND hWnd, _Out_ DWORD *lpdwProcessId)');
-    const GetWindowTextA = user32.func("int __stdcall GetWindowTextA(HWND hWnd, _Out_ uint8_t *lpString, int nMaxCount)")
-    const GetClassNameA = user32.func("int __stdcall GetClassNameA(HWND hWnd, _Out_ uint8_t *lpString, int nMaxCount)")
-    const OpenProcess = kernel32.func("HANDLE OpenProcess(DWORD dwDesiredAccess, bool bInheritHandle, DWORD dwProcessId)");
-    const QueryFullProcessImageNameA = kernel32.func("int QueryFullProcessImageNameA(HANDLE hProcess, DWORD dwFlags, _Out_ uint8_t *lpExeName, int lpdwSize)");
-    const CloseHandle = kernel32.func("int CloseHandle(HANDLE hObject)");
+  const GetForegroundWindow = user32.func('HWND GetForegroundWindow()')
+  const GetWindowThreadProcessId = user32.func(
+    'DWORD __stdcall GetWindowThreadProcessId(HWND hWnd, _Out_ DWORD *lpdwProcessId)'
+  )
+  const GetWindowTextA = user32.func(
+    'int __stdcall GetWindowTextA(HWND hWnd, _Out_ uint8_t *lpString, int nMaxCount)'
+  )
+  const GetClassNameA = user32.func(
+    'int __stdcall GetClassNameA(HWND hWnd, _Out_ uint8_t *lpString, int nMaxCount)'
+  )
+  const OpenProcess = kernel32.func(
+    'HANDLE OpenProcess(DWORD dwDesiredAccess, bool bInheritHandle, DWORD dwProcessId)'
+  )
+  const QueryFullProcessImageNameA = kernel32.func(
+    'int QueryFullProcessImageNameA(HANDLE hProcess, DWORD dwFlags, _Out_ uint8_t *lpExeName, int lpdwSize)'
+  )
+  const CloseHandle = kernel32.func('int CloseHandle(HANDLE hObject)')
 
-    return {
-      GetForegroundWindow,
-      GetWindowThreadProcessId,
-      GetWindowTextA,
-      GetClassNameA,
-      OpenProcess,
-      QueryFullProcessImageNameA,
-      CloseHandle
-    }
-
+  return {
+    GetForegroundWindow,
+    GetWindowThreadProcessId,
+    GetWindowTextA,
+    GetClassNameA,
+    OpenProcess,
+    QueryFullProcessImageNameA,
+    CloseHandle
+  }
 }
 
-export const trackActiveWindow = (args: WindowsPrepWork | undefined ): ActiveWindowInfo => {
+export const trackActiveWindow = (args: WindowsPrepWork | undefined): ActiveWindowInfo => {
   const platform = os.platform()
 
   let activeWindowInfo: Omit<ActiveWindowInfo, 'id'> | undefined
-  if (platform === 'win32' ) {
-    if(!args){
+  if (platform === 'win32') {
+    if (!args) {
       throw new Error('Args are missing!')
     }
 
@@ -100,61 +104,70 @@ export const trackActiveWindow = (args: WindowsPrepWork | undefined ): ActiveWin
   const id = createHash('md5').update(JSON.stringify(activeWindowInfo)).digest('hex')
 
   //ignore
-  // @ts-ignore
   delete activeWindowInfo.allData
 
   return { ...activeWindowInfo, id }
 }
 
-const trackActiveWindow_Windows = (args: WindowsPrepWork): Omit<ActiveWindowInfo, 'id'> | undefined => {
-  const {GetForegroundWindow,  GetWindowThreadProcessId, GetWindowTextA, GetClassNameA, OpenProcess, QueryFullProcessImageNameA, CloseHandle} = args
+const trackActiveWindow_Windows = (
+  args: WindowsPrepWork
+): Omit<ActiveWindowInfo, 'id'> | undefined => {
+  const {
+    GetForegroundWindow,
+    GetWindowThreadProcessId,
+    GetWindowTextA,
+    GetClassNameA,
+    OpenProcess,
+    QueryFullProcessImageNameA,
+    CloseHandle
+  } = args
 
   try {
     // Constants
-    const PROCESS_QUERY_INFORMATION = 0x0400;
-    const PROCESS_VM_READ = 0x0010;
+    const PROCESS_QUERY_INFORMATION = 0x0400
+    const PROCESS_VM_READ = 0x0010
     // const MAX_PATH = 1024;
     // const BUFFER_SIZE = 256;
 
     // Get the active window handle
     // const hwndPtr = koffi.alloc(HWND, BUFFER_SIZE);  // Allocate with type and initial value
-    const hwnd = GetForegroundWindow();
+    const hwnd = GetForegroundWindow()
     // hwndPtr.write(hwnd);
 
     if (!hwnd || hwnd.address === 0) {
-      console.warn('No foreground window found');
-      return undefined;
+      console.warn('No foreground window found')
+      return undefined
     }
 
     // Get window title
-    let buf = Buffer.allocUnsafe(1024);
-    const titleLength = GetWindowTextA(hwnd, buf, buf.length);
+    const buf = Buffer.allocUnsafe(1024)
+    const titleLength = GetWindowTextA(hwnd, buf, buf.length)
     if (!titleLength) {
       // Maybe the process ended in-between?
       throw new Error('Window Stopped somehow')
     }
-    const title = koffi.decode(buf, 'char', titleLength);
+    const title = koffi.decode(buf, 'char', titleLength)
 
     // Get process ID
-    let ptr = [null]
-    let tid = GetWindowThreadProcessId(hwnd, ptr)
+    const ptr = [null]
+    const tid = GetWindowThreadProcessId(hwnd, ptr)
     if (!tid) {
-        // Maybe the process ended in-between?
-        throw new Error('Window Stopped somehow')
+      // Maybe the process ended in-between?
+      throw new Error('Window Stopped somehow')
     }
-    const pid = ptr[0];
+    const pid = ptr[0]
 
     // Get window class name
-    let buf2 = Buffer.allocUnsafe(1024);
-    const classNameLength = GetClassNameA(hwnd, buf2, buf2.length);
+    const buf2 = Buffer.allocUnsafe(1024)
+    const classNameLength = GetClassNameA(hwnd, buf2, buf2.length)
     if (!classNameLength) {
       // Maybe the process ended in-between?
       throw new Error('Window Stopped somehow')
     }
-    const className = koffi.decode(buf2, 'char', classNameLength);
+    const className = koffi.decode(buf2, 'char', classNameLength)
 
     // Open the process
-    const processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid);
+    const processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid)
     if (!processHandle || processHandle.address === 0) {
       // Maybe the process ended in-between?
       throw new Error(`Failed to open process for PID: ${pid}`)
@@ -168,38 +181,31 @@ const trackActiveWindow_Windows = (args: WindowsPrepWork): Omit<ActiveWindowInfo
     //   throw new Error('Window Stopped somehow')
     // }
     // const executable = koffi.decode(buf3, 'char', executableLength);
-  
+
     // Close process handle
-    CloseHandle(processHandle);
+    CloseHandle(processHandle)
 
     console.log('test', { title, pid, className })
-    
 
-
-
-
-    return { 
-      // title, 
-      // executable, 
-      // className, 
-      allData: JSON.stringify({ hwnd: hwnd.address, 
-        // pid 
-      }) 
-    };
-  } catch (error) {
-    const errorMessage = `Error getting active window info: ${error}`;
-    console.error(errorMessage);
-    
-    try {
-      fs.writeFileSync('window-tracking-error.log', errorMessage + '\n', { flag: 'a' });
-    } catch (logError) {
-      console.error('Failed to write error log:', logError);
+    return {
+      title,
+      className,
+      allData: JSON.stringify({ title, pid, className })
+      // executable
     }
-    
-    return undefined;
-  }
-};
+  } catch (error) {
+    const errorMessage = `Error getting active window info: ${error}`
+    console.error(errorMessage)
 
+    try {
+      fs.writeFileSync('window-tracking-error.log', errorMessage + '\n', { flag: 'a' })
+    } catch (logError) {
+      console.error('Failed to write error log:', logError)
+    }
+
+    return undefined
+  }
+}
 
 const trackActiveWindow_Mac = (): undefined => {
   throw new Error('OS still under development')

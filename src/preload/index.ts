@@ -47,10 +47,8 @@ const api: CustomAPI = {
   sendVersion: (callback): void => {
     const event: MainToRendererChannel = 'send-app-version'
     ipcRenderer.on(event, callback)
-  },
+  }
 }
-
-
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise

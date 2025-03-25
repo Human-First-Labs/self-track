@@ -1,6 +1,6 @@
 import os from 'os'
-import { MainToRendererChannel } from "./entities"
-import { prepForOs, resetForOs, trackActiveWindow } from "./tracking"
+import { MainToRendererChannel } from './entities'
+import { prepForOs, resetForOs, trackActiveWindow } from './tracking'
 
 let interval: string | number | NodeJS.Timeout | undefined
 
