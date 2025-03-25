@@ -12,7 +12,7 @@
   // $inspect(currentActivity)
   // $inspect(passedActivities)
 
-  const handleNewActivityInfo = (activityInfo: ActiveWindowInfo) => {
+  const handleNewActivityInfo = (activityInfo: ActiveWindowInfo): void => {
     // console.log('allData', activityInfo)
 
     delete activityInfo.allData
@@ -38,7 +38,7 @@
     }
   }
 
-  const toggleRecording = () => {
+  const toggleRecording = (): void => {
     recording = !recording
 
     if (!recording) {
