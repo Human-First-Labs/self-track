@@ -1,9 +1,11 @@
 import { execSync } from 'child_process'
-import { ActiveWindowInfo } from './entities'
+import { ActiveWindowInfo, ActivityPeriod } from './entities'
 import { createHash } from 'crypto'
 import os from 'os'
 import fs from 'fs'
 import koffi, { KoffiFunction } from 'koffi'
+import { DataWriter } from './data-consolidation'
+import { DateTime } from 'luxon'
 
 interface WindowsPrepWork {
   //TODO all the functions used by Windows
@@ -17,19 +19,23 @@ interface WindowsPrepWork {
   GetLastError: KoffiFunction
 }
 
-export const resetForOs = (): void => {
+let currentActivity: ActivityPeriod | undefined = undefined
+
+const resetForOs = (): void => {
   const platform = os.platform()
 
   if (platform === 'win32') {
     resetForOs_Windows()
   }
+
+  DataWriter.closeCSV()
 }
 
 const resetForOs_Windows = (): void => {
   koffi.reset()
 }
 
-export const prepForOs = (): WindowsPrepWork | undefined => {
+const prepForOs = (): WindowsPrepWork | undefined => {
   const platform = os.platform()
 
   let setup: WindowsPrepWork | undefined = undefined
@@ -84,7 +90,7 @@ const prepForOs_Windows = (): WindowsPrepWork => {
   }
 }
 
-export const trackActiveWindow = (args: WindowsPrepWork | undefined): ActiveWindowInfo => {
+const trackActiveWindow = (args: WindowsPrepWork | undefined): ActivityPeriod => {
   const platform = os.platform()
 
   let activeWindowInfo: Omit<ActiveWindowInfo, 'id'> | undefined
@@ -111,7 +117,20 @@ export const trackActiveWindow = (args: WindowsPrepWork | undefined): ActiveWind
   //ignore
   delete activeWindowInfo.allData
 
-  return { ...activeWindowInfo, id }
+  if (currentActivity?.id === id) {
+    currentActivity.end = DateTime.now().toMillis()
+  } else {
+    currentActivity = {
+      id,
+      start: DateTime.now().toMillis(),
+      end: DateTime.now().toMillis(),
+      ...activeWindowInfo
+    }
+  }
+
+  DataWriter.writeAddData(currentActivity)
+
+  return currentActivity
 }
 
 const trackActiveWindow_Windows = (
@@ -174,8 +193,6 @@ const trackActiveWindow_Windows = (
       throw new Error(`Failed to open process for PID: ${pid}`)
     }
 
-
-
     // try{
     //   // Get executable path
     //   let buf3 = Buffer.alloc(1024);
@@ -185,7 +202,6 @@ const trackActiveWindow_Windows = (
     //     throw new Error('Window Stopped somehow')
     //   }
     //   const executable = koffi.decode(buf3, 'char', executableLength);
-  
 
     // }catch(e){
     //   console.error('boop', e)
@@ -202,12 +218,8 @@ const trackActiveWindow_Windows = (
       title,
       className,
       allData: JSON.stringify({ title, pid, className })
-
     }
   } catch (error) {
-
-
-    
     const errorMessage = `Error getting active window info: ${error}`
     console.error(errorMessage)
 
@@ -249,4 +261,10 @@ const trackActiveWindow_Linux = (): Omit<ActiveWindowInfo, 'id'> | undefined => 
     fs.writeFileSync('error.txt', errorMessage)
     return undefined
   }
+}
+
+export const Tracker = {
+  resetForOs,
+  prepForOs,
+  trackActiveWindow
 }

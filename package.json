@@ -25,9 +25,10 @@
   "dependencies": {
     "@electron-toolkit/preload": "3.0.1",
     "@electron-toolkit/utils": "4.0.0",
-    "electron-updater": "6.3.9",
+    "csv-parser": "3.2.0",
+    "electron-updater": "6.6.2",
     "koffi": "2.10.1",
-    "luxon": "3.5.0"
+    "luxon": "3.6.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "3.0.0",
@@ -36,9 +37,9 @@
     "@sveltejs/vite-plugin-svelte": "5.0.3",
     "@types/luxon": "3.4.2",
     "@types/node": "22.13.13",
-    "electron": "35.0.3",
-    "electron-builder": "25.1.8",
-    "electron-vite": "3.0.0",
+    "electron": "35.1.1",
+    "electron-builder": "26.0.12",
+    "electron-vite": "3.1.0",
     "eslint": "9.23.0",
     "eslint-plugin-svelte": "3.3.3",
     "prettier": "3.5.3",

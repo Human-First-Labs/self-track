@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { MainToRendererChannel, RendererToMainChannel } from './entities'
 import { startTracking, endTracking, detectOS } from './logic'
+// import { ElevatePrivileges } from './admin-privilages'
 
 let mainWindow: BrowserWindow
 
@@ -14,11 +15,12 @@ const createWindow = (): void => {
   const screenHeight = display.workAreaSize.height
 
   const width = 300
-  const height = 400
+  const height = 300
 
   // Create the browser window.
   mainWindow = new BrowserWindow({
     alwaysOnTop: true,
+    autoHideMenuBar: true,
     width,
     height,
     show: false,
@@ -35,7 +37,12 @@ const createWindow = (): void => {
   mainWindow.loadFile(join(__dirname, 'index.html'))
   // Send the application version to the render
 
-  mainWindow.on('ready-to-show', () => {
+  mainWindow.on('ready-to-show', async () => {
+    try {
+      // await ElevatePrivileges.elevate()
+    } catch (e) {
+      console.error(e)
+    }
     mainWindow.show()
   })
 

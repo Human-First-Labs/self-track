@@ -1,25 +1,26 @@
 import os from 'os'
 import { MainToRendererChannel } from './entities'
-import { prepForOs, resetForOs, trackActiveWindow } from './tracking'
+import { Tracker } from './tracking'
+import { BrowserWindow } from 'electron'
 
 let interval: string | number | NodeJS.Timeout | undefined
 
-export const startTracking = (mainWindow: any) => {
-  const args = prepForOs()
+export const startTracking = (mainWindow: BrowserWindow): void => {
+  const args = Tracker.prepForOs()
 
   interval = setInterval(() => {
-    const tracking = trackActiveWindow(args)
+    const tracking = Tracker.trackActiveWindow(args)
     const event: MainToRendererChannel = 'send-window-info'
     mainWindow.webContents.send(event, tracking)
   }, 1000)
 }
 
-export const endTracking = () => {
+export const endTracking = (): void => {
   clearInterval(interval)
-  resetForOs()
+  Tracker.resetForOs()
 }
 
-export const detectOS = () => {
+export const detectOS = (): string => {
   const platform = os.platform()
 
   return platform

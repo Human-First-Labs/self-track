@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { ActiveWindowInfo, MainToRendererChannel, RendererToMainChannel } from '../main/entities'
+import { ActivityPeriod, MainToRendererChannel, RendererToMainChannel } from '../main/entities'
 
 export type CustomAPI = {
   //Renderer to Main
@@ -10,7 +10,7 @@ export type CustomAPI = {
   requestOs: () => void
   //Main To Renderer
   sendWindowInfo: (
-    callback: (event: Electron.IpcRendererEvent, windowInfo: ActiveWindowInfo) => void
+    callback: (event: Electron.IpcRendererEvent, windowInfo: ActivityPeriod) => void
   ) => void
   sendVersion: (callback: (event: Electron.IpcRendererEvent, version: string) => void) => void
   sendOS: (callback: (event: Electron.IpcRendererEvent, os: string) => void) => void

@@ -1,12 +1,11 @@
 <script lang="ts">
   import './toolkit/default-hfl.css'
   import Footer from './Footer.svelte'
-  import type { ActivityPeriod, ActiveWindowInfo } from '../../main/entities'
+  import type { ActivityPeriod } from '../../main/entities'
   import { slide } from 'svelte/transition'
   import { DateTime } from 'luxon'
   import { onMount } from 'svelte'
 
-  let passedActivities = $state<ActivityPeriod[]>([])
   let currentActivity = $state<ActivityPeriod | undefined>()
   let recording = $state(false)
 
@@ -17,53 +16,17 @@
       os = currentOs
     })
     window.api.sendWindowInfo((_, windowInfo) => {
-      handleNewActivityInfo(windowInfo)
+      currentActivity = windowInfo
     })
 
     window.api.requestOs()
   })
-
-  // $inspect(currentActivity)
-  // $inspect(passedActivities)
-
-  const handleNewActivityInfo = (activityInfo: ActiveWindowInfo): void => {
-    // console.log('allData', activityInfo)
-
-    delete activityInfo.allData
-
-    if (currentActivity?.id === activityInfo.id) {
-      currentActivity.end = DateTime.now().toMillis()
-    } else {
-      if (currentActivity) {
-        passedActivities = [
-          ...passedActivities,
-          {
-            ...currentActivity,
-            end: DateTime.now().toMillis()
-          }
-        ]
-      }
-
-      currentActivity = {
-        start: DateTime.now().toMillis(),
-        end: DateTime.now().toMillis(),
-        ...activityInfo
-      }
-    }
-  }
 
   const toggleRecording = (): void => {
     recording = !recording
 
     if (!recording) {
       window.api.stopTracking()
-      passedActivities = [
-        ...passedActivities,
-        {
-          ...currentActivity,
-          end: DateTime.now().toMillis()
-        }
-      ]
     } else {
       window.api.startTracking()
     }
