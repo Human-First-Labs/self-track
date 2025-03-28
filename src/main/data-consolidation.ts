@@ -1,19 +1,26 @@
 import { DateTime } from 'luxon'
 import fs from 'fs'
 import { ActivityPeriod } from './entities'
-import csvParser from 'csv-parser'
 import { app } from 'electron'
+import csvParser from 'csv-parser'
 
 const securePath = app.getPath('userData')
 const basePath = `${securePath}/exports/`
 
 let currentFile = ``
 
-const csvHeader = 'id,title,className,executable,start,end\n'
+const csvHeader = 'id,title,className,executable,interactive,start,end\n'
 
-const writeAddData = (data: ActivityPeriod): void => {
+const convertActivityToCSV = (data: ActivityPeriod): string => {
   let dataString = ''
 
+  dataString += `${data.id},${data.details.title},${data.details.className},${data.details.executable},${data.details.interactive},${DateTime.fromMillis(data.start).toISO()},${DateTime.fromMillis(data.end).toISO()}\n`
+
+  return dataString
+}
+
+const addLine = (data: ActivityPeriod): void => {
+  let dataString = ''
   if (!currentFile) {
     try {
       fs.accessSync(basePath, fs.constants.F_OK)
@@ -27,43 +34,54 @@ const writeAddData = (data: ActivityPeriod): void => {
     currentFile = `${basePath}data-${timestamp}.csv`
 
     dataString += csvHeader
-
-    dataString += `${data.id},${data.title},${data.className},${data.executable},${DateTime.fromMillis(data.start).toISO()},${DateTime.fromMillis(data.end).toISO()}\n`
-
-    console.log(dataString)
-
-    fs.writeFileSync(currentFile, dataString, 'utf-8')
-  } else {
-    const parsed: ActivityPeriod[] = []
-
-    fs.createReadStream(currentFile)
-      .pipe(csvParser())
-      .on('data', (currentData) =>
-        parsed.push({
-          ...currentData,
-          start: DateTime.fromISO(currentData.start).toMillis(),
-          end: DateTime.fromISO(currentData.end).toMillis()
-        })
-      )
-      .on('end', () => {
-        const found = parsed.findIndex((item) => item.id === data.id)
-
-        if (found !== -1) {
-          parsed[found] = data
-        } else {
-          parsed.push(data)
-        }
-
-        dataString += csvHeader
-        for (let i = 0; i < parsed.length; i++) {
-          const item = parsed[i]
-
-          dataString += `${item.id},${item.title},${item.className},${item.executable},${DateTime.fromMillis(item.start).toISO()},${DateTime.fromMillis(item.end).toISO()}\n`
-        }
-
-        fs.writeFileSync(currentFile, dataString, 'utf-8')
-      })
   }
+
+  dataString += convertActivityToCSV(data)
+
+  fs.appendFileSync(currentFile, dataString, 'utf-8')
+}
+
+const updateLastLine = (data: ActivityPeriod): void => {
+  if (!currentFile) {
+    throw new Error('No file to update')
+  }
+
+  const parsed: ActivityPeriod[] = []
+
+  fs.createReadStream(currentFile)
+    .pipe(csvParser())
+    .on('data', (currentData) =>
+      parsed.push({
+        id: currentData.id,
+        details: {
+          className: currentData.className,
+          title: currentData.title,
+          executable: currentData.executable,
+          interactive: currentData.interactive === 'true' ? true : false
+        },
+        start: DateTime.fromISO(currentData.start).toMillis(),
+        end: DateTime.fromISO(currentData.end).toMillis()
+      })
+    )
+    .on('end', () => {
+      let dataString = ''
+      const found = parsed.findIndex((item) => item.id === data.id)
+
+      if (found !== -1) {
+        parsed[found] = data
+      } else {
+        parsed.push(data)
+      }
+
+      dataString += csvHeader
+      for (let i = 0; i < parsed.length; i++) {
+        const item = parsed[i]
+
+        dataString += convertActivityToCSV(item)
+      }
+
+      fs.writeFileSync(currentFile, dataString, 'utf-8')
+    })
 }
 
 const closeCSV = (): void => {
@@ -71,6 +89,7 @@ const closeCSV = (): void => {
 }
 
 export const DataWriter = {
-  writeAddData,
+  addLine,
+  updateLastLine,
   closeCSV
 }

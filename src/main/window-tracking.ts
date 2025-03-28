@@ -1,11 +1,11 @@
 import { execSync } from 'child_process'
-import { ActiveWindowInfo, ActivityPeriod } from './entities'
-import { createHash } from 'crypto'
+import { ActiveWindowInfo, ActiveWindowInfoOnly } from './entities'
 import os from 'os'
 import fs from 'fs'
 import koffi, { KoffiFunction } from 'koffi'
 import { DataWriter } from './data-consolidation'
-import { DateTime } from 'luxon'
+import { InteractionTracker } from './interaction-tracking'
+import { createHash } from 'crypto'
 
 interface WindowsPrepWork {
   //TODO all the functions used by Windows
@@ -18,8 +18,6 @@ interface WindowsPrepWork {
   CloseHandle: KoffiFunction
   GetLastError: KoffiFunction
 }
-
-let currentActivity: ActivityPeriod | undefined = undefined
 
 const resetForOs = (): void => {
   const platform = os.platform()
@@ -90,10 +88,11 @@ const prepForOs_Windows = (): WindowsPrepWork => {
   }
 }
 
-const trackActiveWindow = (args: WindowsPrepWork | undefined): ActivityPeriod => {
+const trackActiveWindow = (args: WindowsPrepWork | undefined): ActiveWindowInfo => {
   const platform = os.platform()
 
-  let activeWindowInfo: Omit<ActiveWindowInfo, 'id'> | undefined
+  let activeWindowInfo: Omit<ActiveWindowInfoOnly, 'interactive'> | undefined
+
   if (platform === 'win32') {
     if (!args) {
       throw new Error('Args are missing!')
@@ -112,30 +111,24 @@ const trackActiveWindow = (args: WindowsPrepWork | undefined): ActivityPeriod =>
     throw new Error('Error getting active window info')
   }
 
-  const id = createHash('md5').update(JSON.stringify(activeWindowInfo)).digest('hex')
+  const interaction = InteractionTracker.checkState()
 
-  //ignore
-  delete activeWindowInfo.allData
-
-  if (currentActivity?.id === id) {
-    currentActivity.end = DateTime.now().toMillis()
-  } else {
-    currentActivity = {
-      id,
-      start: DateTime.now().toMillis(),
-      end: DateTime.now().toMillis(),
-      ...activeWindowInfo
-    }
+  const info: ActiveWindowInfoOnly = {
+    ...activeWindowInfo,
+    interactive: interaction
   }
 
-  DataWriter.writeAddData(currentActivity)
+  const hash = createHash('md5').update(JSON.stringify(info)).digest('hex')
 
-  return currentActivity
+  return {
+    hash,
+    ...info
+  }
 }
 
 const trackActiveWindow_Windows = (
   args: WindowsPrepWork
-): Omit<ActiveWindowInfo, 'id'> | undefined => {
+): Omit<ActiveWindowInfoOnly, 'interactive'> | undefined => {
   const {
     GetForegroundWindow,
     GetWindowThreadProcessId,
@@ -212,12 +205,9 @@ const trackActiveWindow_Windows = (
     // Close process handle
     CloseHandle(processHandle)
 
-    console.log('test', { title, pid, className })
-
     return {
-      title,
       className,
-      allData: JSON.stringify({ title, pid, className })
+      title
     }
   } catch (error) {
     const errorMessage = `Error getting active window info: ${error}`
@@ -235,15 +225,11 @@ const trackActiveWindow_Windows = (
 
 const trackActiveWindow_Mac = (): undefined => {
   throw new Error('OS still under development')
-  // return
   //TODO to be implemented
 }
 
-const trackActiveWindow_Linux = (): Omit<ActiveWindowInfo, 'id'> | undefined => {
+const trackActiveWindow_Linux = (): Omit<ActiveWindowInfoOnly, 'interactive'> | undefined => {
   try {
-    const allData = execSync(`xprop -id $(xprop -root _NET_ACTIVE_WINDOW | awk '{print $5}')`)
-      .toString()
-      .trim()
     const windowId = execSync("xprop -root _NET_ACTIVE_WINDOW | awk '{print $5}'").toString().trim()
     const title = execSync(`xprop -id ${windowId} _NET_WM_NAME | awk -F\\" '{print $2}'`)
       .toString()
@@ -254,7 +240,7 @@ const trackActiveWindow_Linux = (): Omit<ActiveWindowInfo, 'id'> | undefined => 
     const pid = execSync(`xprop -id ${windowId} _NET_WM_PID | awk '{print $3}'`).toString().trim()
     const executable = execSync(`ps -p ${pid} -o comm=`).toString().trim()
 
-    return { title, executable, className, allData }
+    return { title, executable, className }
   } catch (error) {
     const errorMessage = 'Error getting active window info: ' + error
     console.error(errorMessage)

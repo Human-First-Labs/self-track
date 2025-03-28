@@ -17,6 +17,7 @@
     })
     window.api.sendWindowInfo((_, windowInfo) => {
       currentActivity = windowInfo
+      console.log(currentActivity)
     })
 
     window.api.requestOs()
@@ -44,15 +45,19 @@
         <h5>Current Activity:</h5>
         <div class="row">
           <strong>Title:</strong>
-          <p>{currentActivity.title}</p>
+          <p>{currentActivity.details.title}</p>
         </div>
         <div class="row">
-          <strong>Program:</strong>
-          <p>{currentActivity.executable}</p>
+          <strong>Executable:</strong>
+          <p>{currentActivity.details.executable}</p>
         </div>
         <div class="row">
-          <strong>Detail:</strong>
-          <p>{currentActivity.className}</p>
+          <strong>Class:</strong>
+          <p>{currentActivity.details.className}</p>
+        </div>
+        <div class="row">
+          <strong>Interactive:</strong>
+          <p>{currentActivity.details.interactive}</p>
         </div>
         <div class="row">
           <strong>Start:</strong>
