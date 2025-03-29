@@ -20,7 +20,8 @@
     "build:mac": "npm run build && electron-builder --mac",
     "build:linux": "npm run build && electron-builder --linux",
     "check-packages": "npx npm-check -u -E",
-    "refresh-packages": "rm -rf node_modules && rm -rf package-lock.json && npm i"
+    "refresh-packages": "rm -rf node_modules && rm -rf package-lock.json && npm i",
+    "rebuild": "./node_modules/.bin/electron-rebuild"
   },
   "dependencies": {
     "@electron-toolkit/preload": "3.0.1",
@@ -29,12 +30,14 @@
     "electron-updater": "6.6.2",
     "koffi": "2.10.1",
     "luxon": "3.6.0",
+    "node-desktop-idle-v2": "0.0.16",
     "uuid": "11.1.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "3.0.0",
     "@electron-toolkit/eslint-config-ts": "3.0.0",
     "@electron-toolkit/tsconfig": "1.0.1",
+    "@electron/rebuild": "3.7.1",
     "@sveltejs/vite-plugin-svelte": "5.0.3",
     "@types/luxon": "3.4.2",
     "@types/node": "22.13.14",

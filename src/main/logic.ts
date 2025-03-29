@@ -5,13 +5,15 @@ import { BrowserWindow } from 'electron'
 import { v4 as uuidv4 } from 'uuid'
 import { DateTime } from 'luxon'
 import { DataWriter } from './data-consolidation'
+import { InteractionTracker } from './interaction-tracking'
 
 let windowInterval: string | number | NodeJS.Timeout | undefined
 let previousPoint: ActiveWindowInfo | undefined = undefined
 let currentActivity: ActivityPeriod | undefined = undefined
 
-export const startTracking = (mainWindow: BrowserWindow): void => {
+export const startTracking = async (mainWindow: BrowserWindow): Promise<void> => {
   const args = Tracker.prepForOs()
+  await InteractionTracker.start()
 
   windowInterval = setInterval(() => {
     const tracking = Tracker.trackActiveWindow(args)
@@ -61,6 +63,7 @@ export const startTracking = (mainWindow: BrowserWindow): void => {
 export const endTracking = (): void => {
   clearInterval(windowInterval)
   Tracker.resetForOs()
+  InteractionTracker.end()
 }
 
 export const detectOS = (): string => {

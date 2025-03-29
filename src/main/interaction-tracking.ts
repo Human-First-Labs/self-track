@@ -1,19 +1,35 @@
-import { powerMonitor } from 'electron'
+import { desktopIdle } from 'node-desktop-idle-v2'
 
 let interaction = false
+const maxIdleTime = 20
+
+// let desktopIdle: DesktopIdle
 
 const checkState = (): boolean => {
-  console.log('timer', powerMonitor.getSystemIdleTime(), powerMonitor.getSystemIdleState(5))
-  const currentState = powerMonitor.getSystemIdleState(60)
-  if (currentState === 'active') {
-    interaction = true
-  } else {
+  const currentIdleTime = desktopIdle.getIdleTime()
+  if (currentIdleTime > maxIdleTime) {
     interaction = false
+  } else {
+    interaction = true
   }
 
   return interaction
 }
 
+const start = async (): Promise<void> => {
+  // if (!desktopIdle) {
+  //   desktopIdle = await getDesktopIdle()
+  // }
+
+  desktopIdle.startMonitoring()
+}
+
+const end = (): void => {
+  desktopIdle.stopMonitoring()
+}
+
 export const InteractionTracker = {
-  checkState
+  start,
+  checkState,
+  end
 }

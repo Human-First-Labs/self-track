@@ -86,8 +86,8 @@ app.whenReady().then(() => {
 
   // Renderer to Main Calls
   const event1: RendererToMainChannel = 'start-tracking'
-  ipcMain.handle(event1, () => {
-    startTracking(mainWindow)
+  ipcMain.handle(event1, async () => {
+    await startTracking(mainWindow)
   })
   const event2: RendererToMainChannel = 'stop-tracking'
   ipcMain.handle(event2, endTracking)
