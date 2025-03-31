@@ -13,15 +13,14 @@
     "typecheck": "npm run typecheck:node && npm run svelte-check",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
-    "build": "npm run electron-rebuild && npm run typecheck && electron-vite build",
+    "build": "npm run typecheck && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "npm run build && electron-builder --mac",
     "build:linux": "npm run build && electron-builder --linux",
     "check-packages": "npx npm-check -u -E",
-    "refresh-packages": "rm -rf node_modules && rm -rf package-lock.json && npm i",
-    "electron-rebuild": "electron-rebuild -f -w yourmodule"
+    "refresh-packages": "rm -rf node_modules && rm -rf package-lock.json && npm i"
   },
   "dependencies": {
     "@electron-toolkit/preload": "3.0.1",
@@ -37,7 +36,6 @@
     "@electron-toolkit/eslint-config-prettier": "3.0.0",
     "@electron-toolkit/eslint-config-ts": "3.0.0",
     "@electron-toolkit/tsconfig": "1.0.1",
-    "@electron/rebuild": "3.7.1",
     "@sveltejs/vite-plugin-svelte": "5.0.3",
     "@types/luxon": "3.4.2",
     "@types/node": "22.13.14",
