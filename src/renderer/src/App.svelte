@@ -32,6 +32,10 @@
       window.api.startTracking()
     }
   }
+
+  const openDirectory = (): void => {
+    window.api.openExportsDirectory()
+  }
 </script>
 
 <div class="column center">
@@ -80,35 +84,7 @@
       </div>
     {/if}
   </div>
-  <!-- <div class="container history">
-    <h5>History:</h5>
-    <ul>
-      {#each passedActivities as activity}
-        <li>
-          <ul>
-            <li>Id: {activity.id}</li>
-            <li>Title: {activity.title}</li>
-            <li>Program: {activity.executable}</li>
-            <li>Detail: {activity.className}</li>
-            <li>
-              Start: {DateTime.fromMillis(activity.start).toFormat('yy/MM/dd HH:mm')}
-            </li>
-            <li>End: {DateTime.fromMillis(activity.end).toFormat('yy/MM/dd HH:mm')}</li>
-            <li>
-              Duration: {DateTime.fromMillis(activity.end)
-                .diff(DateTime.fromMillis(activity.start))
-                .shiftTo('hours', 'minutes', 'seconds')
-                .toHuman({
-                  maximumFractionDigits: 0,
-                  roundingIncrement: 1
-                })}
-            </li>
-          </ul>
-          <hr />
-        </li>
-      {/each}
-    </ul>
-  </div> -->
+  <button class="hidden-button export-btn" onclick={openDirectory}>Open Export Directory</button>
 </div>
 <Footer />
 
@@ -159,8 +135,7 @@
     flex-direction: column;
   }
 
-  /* .history {
-    max-height: 300px;
-    overflow-y: auto;
-  } */
+  .export-btn {
+    color: var(--primary-color);
+  }
 </style>

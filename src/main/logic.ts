@@ -1,11 +1,12 @@
 import os from 'os'
-import { ActiveWindowInfo, ActivityPeriod, MainToRendererChannel } from './entities'
+import { ActiveWindowInfo, ActivityPeriod } from './entities'
 import { Tracker } from './window-tracking'
 import { BrowserWindow } from 'electron'
 import { v4 as uuidv4 } from 'uuid'
 import { DateTime } from 'luxon'
 import { DataWriter } from './data-consolidation'
 import { InteractionTracker } from './interaction-tracking'
+import { MainToRendererChannel } from './events'
 
 let windowInterval: string | number | NodeJS.Timeout | undefined
 let previousPoint: ActiveWindowInfo | undefined = undefined
@@ -15,7 +16,7 @@ export const startTracking = async (mainWindow: BrowserWindow): Promise<void> =>
   const args = Tracker.prepForOs()
   await InteractionTracker.start()
 
-  windowInterval = setInterval(() => {
+  windowInterval = setInterval(async () => {
     const tracking = Tracker.trackActiveWindow(args)
 
     const event: MainToRendererChannel = 'send-window-info'
@@ -46,7 +47,7 @@ export const startTracking = async (mainWindow: BrowserWindow): Promise<void> =>
           executable: tracking.executable
         }
       }
-      DataWriter.addLine(currentActivity)
+      await DataWriter.addLine(currentActivity)
     } else {
       if (!currentActivity) {
         throw new Error('No current activity')

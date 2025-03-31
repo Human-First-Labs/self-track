@@ -2,8 +2,9 @@ import { app, shell, BrowserWindow, ipcMain, screen } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { MainToRendererChannel, RendererToMainChannel } from './entities'
 import { startTracking, endTracking, detectOS } from './logic'
+import { basePath, DataWriter } from './data-consolidation'
+import { RendererToMainChannel, MainToRendererChannel } from './events'
 // import { ElevatePrivileges } from './admin-privilages'
 
 let mainWindow: BrowserWindow
@@ -46,16 +47,6 @@ const createWindow = (): void => {
     mainWindow.show()
   })
 
-  // mainWindow.on('show', () => {
-  //   //Main to Rendere Calls
-  //   const version = app.getVersion()
-  //   const event: MainToRendererChannel = 'app-version'
-  //   mainWindow.webContents.send(event, version)
-  //   const event3: MainToRendererChannel = 'check-os'
-  //   const platform = detectOS()
-  //   mainWindow.webContents.send(event3, platform)
-  // })
-
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
@@ -89,20 +80,30 @@ app.whenReady().then(() => {
   ipcMain.handle(event1, async () => {
     await startTracking(mainWindow)
   })
+
   const event2: RendererToMainChannel = 'stop-tracking'
   ipcMain.handle(event2, endTracking)
+
   const event3: RendererToMainChannel = 'request-version'
   ipcMain.handle(event3, () => {
     const version = app.getVersion()
     const event: MainToRendererChannel = 'send-app-version'
     mainWindow.webContents.send(event, version)
   })
+
   const event4: RendererToMainChannel = 'request-os'
   ipcMain.handle(event4, () => {
     const platform = detectOS()
     const event: MainToRendererChannel = 'send-os'
     mainWindow.webContents.send(event, platform)
   })
+
+  const event5: RendererToMainChannel = 'open-exports-directory'
+  ipcMain.handle(event5, () => {
+    shell.openPath(basePath)
+  })
+
+  DataWriter.createDirectories()
 
   createWindow()
 

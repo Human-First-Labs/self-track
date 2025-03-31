@@ -5,11 +5,25 @@ import { app } from 'electron'
 import csvParser from 'csv-parser'
 
 const securePath = app.getPath('userData')
-const basePath = `${securePath}/exports/`
+
+export const basePath = `${securePath}/exports`
+export const rawPath = basePath + '/raw'
 
 let currentFile = ``
 
 const csvHeader = 'id,title,className,executable,interactive,start,end\n'
+
+const createDirectories = () => {
+  //raw path
+  try {
+    fs.accessSync(rawPath, fs.constants.F_OK)
+  } catch (e) {
+    console.error(e)
+    fs.mkdirSync(rawPath, { recursive: true })
+  }
+
+
+}
 
 const convertActivityToCSV = (data: ActivityPeriod): string => {
   let dataString = ''
@@ -19,20 +33,13 @@ const convertActivityToCSV = (data: ActivityPeriod): string => {
   return dataString
 }
 
-const addLine = (data: ActivityPeriod): void => {
+const addLine = async (data: ActivityPeriod): Promise<void> => {
   let dataString = ''
-  if (!currentFile) {
-    try {
-      fs.accessSync(basePath, fs.constants.F_OK)
-    } catch (e) {
-      console.error(e)
-      fs.mkdirSync(basePath, { recursive: true })
-    }
-
-    const timestamp = DateTime.now().toMillis()
-
-    currentFile = `${basePath}data-${timestamp}.csv`
-
+  if(!currentFile){
+    const timestamp = DateTime.now().toFormat('yyyy-MM-dd_HH-mm-ss')
+  
+    currentFile = `${rawPath}/${timestamp}.csv`
+  
     dataString += csvHeader
   }
 
@@ -89,6 +96,7 @@ const closeCSV = (): void => {
 }
 
 export const DataWriter = {
+  createDirectories,
   addLine,
   updateLastLine,
   closeCSV

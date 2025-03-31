@@ -13,7 +13,7 @@
     "typecheck": "npm run typecheck:node && npm run svelte-check",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
-    "build": "npm run typecheck && electron-vite build",
+    "build": "npm run rebuild && npm run typecheck && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
@@ -21,7 +21,8 @@
     "build:linux": "npm run build && electron-builder --linux",
     "check-packages": "npx npm-check -u -E",
     "refresh-packages": "rm -rf node_modules && rm -rf package-lock.json && npm i",
-    "rebuild": "./node_modules/.bin/electron-rebuild"
+    "electron-rebuild:linux": "./node_modules/.bin/electron-rebuild",
+    "electron-rebuild:win": "electron-rebuild -f -w yourmodule"
   },
   "dependencies": {
     "@electron-toolkit/preload": "3.0.1",
@@ -30,7 +31,7 @@
     "electron-updater": "6.6.2",
     "koffi": "2.10.1",
     "luxon": "3.6.0",
-    "node-desktop-idle-v2": "0.0.16",
+    "node-desktop-idle-v2": "0.0.17",
     "uuid": "11.1.0"
   },
   "devDependencies": {
@@ -46,13 +47,13 @@
     "electron-builder": "26.0.12",
     "electron-vite": "3.1.0",
     "eslint": "9.23.0",
-    "eslint-plugin-svelte": "3.3.3",
+    "eslint-plugin-svelte": "3.4.0",
     "npm-check": "6.0.1",
     "prettier": "3.5.3",
     "prettier-plugin-svelte": "3.3.3",
     "svelte": "5.25.3",
     "svelte-check": "4.1.5",
     "typescript": "5.8.2",
-    "vite": "6.2.3"
+    "vite": "6.2.4"
   }
 }

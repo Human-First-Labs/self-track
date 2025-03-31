@@ -2,21 +2,19 @@ import { execSync } from 'child_process'
 import { ActiveWindowInfo, ActiveWindowInfoOnly } from './entities'
 import os from 'os'
 import fs from 'fs'
-import koffi, { KoffiFunction } from 'koffi'
+import koffi, { inout, KoffiFunction, opaque, out, pointer } from 'koffi'
 import { DataWriter } from './data-consolidation'
 import { InteractionTracker } from './interaction-tracking'
 import { createHash } from 'crypto'
 
 interface WindowsPrepWork {
-  //TODO all the functions used by Windows
   GetForegroundWindow: KoffiFunction
   GetWindowThreadProcessId: KoffiFunction
-  GetWindowTextA: KoffiFunction
-  GetClassNameA: KoffiFunction
+  GetWindowText: KoffiFunction
+  GetClassName: KoffiFunction
   OpenProcess: KoffiFunction
-  QueryFullProcessImageNameA: KoffiFunction
+  QueryFullProcessImageName: KoffiFunction
   CloseHandle: KoffiFunction
-  GetLastError: KoffiFunction
 }
 
 const resetForOs = (): void => {
@@ -47,43 +45,44 @@ const prepForOs = (): WindowsPrepWork | undefined => {
 
 const prepForOs_Windows = (): WindowsPrepWork => {
   // Define Windows-specific types
-  const HANDLE = koffi.pointer('HANDLE', koffi.opaque())
-  koffi.alias('HWND', HANDLE)
-  koffi.alias('DWORD', 'uint32_t')
+  const cHWND = pointer('HWND', opaque())
+  type HANDLE<Kind extends string> = koffi.IKoffiCType & { __kind: Kind }
+  type HWND = HANDLE<'HWND'>
+  const cDWORD = koffi.types.uint32
+  const cLPDWORD = pointer('LPDWORD', koffi.types.uint32)
+  const cINT = koffi.types.int
+  const cLPWSTR = koffi.types.str16
+  const cHANDLE     = pointer('HANDLE',   opaque())
+  const cBOOL       = koffi.types.int
 
   // Load Windows API libraries
   const user32 = koffi.load('user32.dll')
   const kernel32 = koffi.load('kernel32.dll')
 
-  const GetForegroundWindow = user32.func('HWND GetForegroundWindow()')
-  const GetWindowThreadProcessId = user32.func(
-    'DWORD __stdcall GetWindowThreadProcessId(HWND hWnd, _Out_ DWORD *lpdwProcessId)'
-  )
-  const GetWindowTextA = user32.func(
-    'int __stdcall GetWindowTextA(HWND hWnd, _Out_ uint8_t *lpString, int nMaxCount)'
-  )
-  const GetClassNameA = user32.func(
-    'int __stdcall GetClassNameA(HWND hWnd, _Out_ uint8_t *lpString, int nMaxCount)'
-  )
-  const OpenProcess = kernel32.func(
-    'HANDLE OpenProcess(DWORD dwDesiredAccess, bool bInheritHandle, DWORD dwProcessId)'
-  )
-  const QueryFullProcessImageNameA = kernel32.func(
-    'int QueryFullProcessImageNameA(HANDLE hProcess, DWORD dwFlags, _Out_ uint8_t *lpExeName, int lpdwSize)'
-  )
+  const user32Function = user32.func
+  const kernel32Function = kernel32.func
 
-  const GetLastError = kernel32.func('DWORD GetLastError()')
+  const GetForegroundWindow: koffi.KoffiFunc<() => HWND> = user32Function('GetForegroundWindow', cHWND, [])
 
-  const CloseHandle = kernel32.func('int CloseHandle(HANDLE hObject)')
+  const GetWindowThreadProcessId = user32Function('GetWindowThreadProcessId', cDWORD, [cHWND, inout(cLPDWORD)])
+
+  const GetWindowText = user32Function('GetWindowTextW', cINT, [ cHWND, out(cLPWSTR), cINT ])
+
+  const GetClassName = user32Function('GetClassNameW', cINT, [ cHWND, out(cLPWSTR), cINT ])
+
+  const OpenProcess = kernel32Function('OpenProcess', cHANDLE, [ cDWORD, cBOOL, cDWORD ])
+
+  const QueryFullProcessImageName = kernel32Function('QueryFullProcessImageNameW', cBOOL, [ cHANDLE, cDWORD, out(cLPWSTR), inout(cLPDWORD) ])
+
+  const CloseHandle = kernel32Function('CloseHandle', cBOOL, [ cHANDLE ])
 
   return {
     GetForegroundWindow,
     GetWindowThreadProcessId,
-    GetWindowTextA,
-    GetClassNameA,
+    GetWindowText,
+    GetClassName,
     OpenProcess,
-    QueryFullProcessImageNameA,
-    GetLastError,
+    QueryFullProcessImageName,
     CloseHandle
   }
 }
@@ -132,13 +131,14 @@ const trackActiveWindow_Windows = (
   const {
     GetForegroundWindow,
     GetWindowThreadProcessId,
-    GetWindowTextA,
-    GetClassNameA,
+    GetWindowText,
+    GetClassName,
     OpenProcess,
-    // QueryFullProcessImageNameA,
-    // GetLastError,
+    QueryFullProcessImageName,
     CloseHandle
   } = args
+
+  const textDecoder = new TextDecoder('utf-16')
 
   try {
     // Constants
@@ -147,67 +147,46 @@ const trackActiveWindow_Windows = (
 
     const hwnd = GetForegroundWindow()
 
-    if (!hwnd || hwnd.address === 0) {
+    if (!hwnd) {
       console.warn('No foreground window found')
       return undefined
     }
 
     // Get window title
-    const buf = Buffer.alloc(1024)
-    const titleLength = GetWindowTextA(hwnd, buf, buf.length)
-    if (!titleLength) {
-      // Maybe the process ended in-between?
-      throw new Error('Window Stopped somehow')
-    }
-    const title = koffi.decode(buf, 'char', titleLength)
+    const out = new Uint16Array(512)
+    const len = GetWindowText(hwnd, out, 512)
+    const title = textDecoder.decode(out).slice(0, len)
 
     // Get process ID
-    const ptr = [null]
-    const tid = GetWindowThreadProcessId(hwnd, ptr)
-    if (!tid) {
-      // Maybe the process ended in-between?
-      throw new Error('Window Stopped somehow')
-    }
-    const pid = ptr[0]
+    const out2 = [ 0 ] as [ number ]
+    GetWindowThreadProcessId(hwnd, out2)
+    const pid = out2[0]
 
     // Get window class name
-    const buf2 = Buffer.alloc(1024)
-    const classNameLength = GetClassNameA(hwnd, buf2, buf2.length)
-    if (!classNameLength) {
-      // Maybe the process ended in-between?
-      throw new Error('Window Stopped somehow')
-    }
-    const className = koffi.decode(buf2, 'char', classNameLength)
+    const out3 = new Uint16Array(512)
+    const len2 = GetClassName(hwnd, out3, 512)
+    const className =  textDecoder.decode(out3).slice(0, len2)
 
     // Open the process
-    const processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid)
-    if (!processHandle || processHandle.address === 0) {
+    const processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, pid)
+    if (!processHandle) {
       // Maybe the process ended in-between?
       throw new Error(`Failed to open process for PID: ${pid}`)
     }
 
-    // try{
-    //   // Get executable path
-    //   let buf3 = Buffer.alloc(1024);
-    //   const executableLength = QueryFullProcessImageNameA(processHandle, 0, buf3, buf3.length);
-    //   if (!executableLength) {
-    //     // Maybe the process ended in-between?
-    //     throw new Error('Window Stopped somehow')
-    //   }
-    //   const executable = koffi.decode(buf3, 'char', executableLength);
+    // Get the full process image name
+    
+    const exeName = new Uint16Array(256)
+    const dwSize  = [ exeName.length ] as [ number ]
+    const executable = QueryFullProcessImageName(processHandle, 0, exeName, dwSize) === 0 ? undefined: textDecoder.decode(exeName).slice(0, dwSize[0])
 
-    // }catch(e){
-    //   console.error('boop', e)
-    //   const result = GetLastError()
-    //   console.log('test2',result )
-
-    // }
     // Close process handle
     CloseHandle(processHandle)
 
     return {
       className,
-      title
+      title,
+      executable
     }
   } catch (error) {
     const errorMessage = `Error getting active window info: ${error}`
