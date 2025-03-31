@@ -13,7 +13,7 @@
     "typecheck": "npm run typecheck:node && npm run svelte-check",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
-    "build": "npm run rebuild && npm run typecheck && electron-vite build",
+    "build": "npm run electron-rebuild && npm run typecheck && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
@@ -21,8 +21,7 @@
     "build:linux": "npm run build && electron-builder --linux",
     "check-packages": "npx npm-check -u -E",
     "refresh-packages": "rm -rf node_modules && rm -rf package-lock.json && npm i",
-    "electron-rebuild:linux": "./node_modules/.bin/electron-rebuild",
-    "electron-rebuild:win": "electron-rebuild -f -w yourmodule"
+    "electron-rebuild": "electron-rebuild -f -w yourmodule"
   },
   "dependencies": {
     "@electron-toolkit/preload": "3.0.1",
