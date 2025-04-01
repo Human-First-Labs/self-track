@@ -5,9 +5,11 @@ import icon from '../../resources/icon.png?asset'
 import { startTracking, endTracking, detectOS } from './logic'
 import { basePath, DataWriter } from './data-consolidation'
 import { RendererToMainChannel, MainToRendererChannel } from './events'
+import { PermissionChecker, PermissionChecks } from './permission-checker'
 // import { ElevatePrivileges } from './admin-privilages'
 
 let mainWindow: BrowserWindow
+let permissionChecks: PermissionChecks
 
 const createWindow = (): void => {
   const display = screen.getPrimaryDisplay()
@@ -40,7 +42,7 @@ const createWindow = (): void => {
 
   mainWindow.on('ready-to-show', async () => {
     try {
-      // await ElevatePrivileges.elevate()
+      permissionChecks = await PermissionChecker.checkPermissions()
     } catch (e) {
       console.error(e)
     }
@@ -78,7 +80,10 @@ app.whenReady().then(() => {
   // Renderer to Main Calls
   const event1: RendererToMainChannel = 'start-tracking'
   ipcMain.handle(event1, async () => {
-    await startTracking(mainWindow)
+    await startTracking({
+      mainWindow,
+      permissionChecks
+    })
   })
 
   const event2: RendererToMainChannel = 'stop-tracking'
