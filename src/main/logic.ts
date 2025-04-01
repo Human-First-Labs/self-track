@@ -7,17 +7,28 @@ import { DateTime } from 'luxon'
 import { DataWriter } from './data-consolidation'
 import { InteractionTracker } from './interaction-tracking'
 import { MainToRendererChannel } from './events'
+import { PermissionChecks } from './permission-checker'
 
 let windowInterval: string | number | NodeJS.Timeout | undefined
 let previousPoint: ActiveWindowInfo | undefined = undefined
 let currentActivity: ActivityPeriod | undefined = undefined
 
-export const startTracking = async (mainWindow: BrowserWindow): Promise<void> => {
-  const args = Tracker.prepForOs()
-  await InteractionTracker.start()
+export const startTracking = async (args: {
+  mainWindow: BrowserWindow
+  permissionChecks: PermissionChecks
+}): Promise<void> => {
+  const { mainWindow, permissionChecks } = args
+
+  const prep = Tracker.prepForOs()
+  if (permissionChecks.inputPermission) {
+    await InteractionTracker.start()
+  }
 
   windowInterval = setInterval(async () => {
-    const tracking = Tracker.trackActiveWindow(args)
+    const tracking = Tracker.trackActiveWindow({
+      prep,
+      permissionChecks
+    })
 
     const event: MainToRendererChannel = 'send-window-info'
 

@@ -2,7 +2,7 @@ export interface ActiveWindowInfoOnly {
   title: string
   executable?: string
   className: string
-  interactive: boolean
+  interactive: 'active' | 'inactive' | 'unknown'
 }
 
 export interface ActiveWindowInfo extends ActiveWindowInfoOnly {

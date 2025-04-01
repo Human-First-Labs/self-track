@@ -6,6 +6,7 @@ import koffi, { inout, KoffiFunction, opaque, out, pointer } from 'koffi'
 import { DataWriter } from './data-consolidation'
 import { InteractionTracker } from './interaction-tracking'
 import { createHash } from 'crypto'
+import { PermissionChecks } from './permission-checker'
 
 interface WindowsPrepWork {
   GetForegroundWindow: KoffiFunction
@@ -52,8 +53,8 @@ const prepForOs_Windows = (): WindowsPrepWork => {
   const cLPDWORD = pointer('LPDWORD', koffi.types.uint32)
   const cINT = koffi.types.int
   const cLPWSTR = koffi.types.str16
-  const cHANDLE     = pointer('HANDLE',   opaque())
-  const cBOOL       = koffi.types.int
+  const cHANDLE = pointer('HANDLE', opaque())
+  const cBOOL = koffi.types.int
 
   // Load Windows API libraries
   const user32 = koffi.load('user32.dll')
@@ -62,19 +63,31 @@ const prepForOs_Windows = (): WindowsPrepWork => {
   const user32Function = user32.func
   const kernel32Function = kernel32.func
 
-  const GetForegroundWindow: koffi.KoffiFunc<() => HWND> = user32Function('GetForegroundWindow', cHWND, [])
+  const GetForegroundWindow: koffi.KoffiFunc<() => HWND> = user32Function(
+    'GetForegroundWindow',
+    cHWND,
+    []
+  )
 
-  const GetWindowThreadProcessId = user32Function('GetWindowThreadProcessId', cDWORD, [cHWND, inout(cLPDWORD)])
+  const GetWindowThreadProcessId = user32Function('GetWindowThreadProcessId', cDWORD, [
+    cHWND,
+    inout(cLPDWORD)
+  ])
 
-  const GetWindowText = user32Function('GetWindowTextW', cINT, [ cHWND, out(cLPWSTR), cINT ])
+  const GetWindowText = user32Function('GetWindowTextW', cINT, [cHWND, out(cLPWSTR), cINT])
 
-  const GetClassName = user32Function('GetClassNameW', cINT, [ cHWND, out(cLPWSTR), cINT ])
+  const GetClassName = user32Function('GetClassNameW', cINT, [cHWND, out(cLPWSTR), cINT])
 
-  const OpenProcess = kernel32Function('OpenProcess', cHANDLE, [ cDWORD, cBOOL, cDWORD ])
+  const OpenProcess = kernel32Function('OpenProcess', cHANDLE, [cDWORD, cBOOL, cDWORD])
 
-  const QueryFullProcessImageName = kernel32Function('QueryFullProcessImageNameW', cBOOL, [ cHANDLE, cDWORD, out(cLPWSTR), inout(cLPDWORD) ])
+  const QueryFullProcessImageName = kernel32Function('QueryFullProcessImageNameW', cBOOL, [
+    cHANDLE,
+    cDWORD,
+    out(cLPWSTR),
+    inout(cLPDWORD)
+  ])
 
-  const CloseHandle = kernel32Function('CloseHandle', cBOOL, [ cHANDLE ])
+  const CloseHandle = kernel32Function('CloseHandle', cBOOL, [cHANDLE])
 
   return {
     GetForegroundWindow,
@@ -87,17 +100,22 @@ const prepForOs_Windows = (): WindowsPrepWork => {
   }
 }
 
-const trackActiveWindow = (args: WindowsPrepWork | undefined): ActiveWindowInfo => {
+const trackActiveWindow = (args: {
+  prep: WindowsPrepWork | undefined
+  permissionChecks: PermissionChecks
+}): ActiveWindowInfo => {
+  const { prep, permissionChecks } = args
+
   const platform = os.platform()
 
   let activeWindowInfo: Omit<ActiveWindowInfoOnly, 'interactive'> | undefined
 
   if (platform === 'win32') {
-    if (!args) {
-      throw new Error('Args are missing!')
+    if (!prep) {
+      throw new Error('Prep are missing!')
     }
 
-    activeWindowInfo = trackActiveWindow_Windows(args)
+    activeWindowInfo = trackActiveWindow_Windows(prep)
   } else if (platform === 'darwin') {
     activeWindowInfo = trackActiveWindow_Mac()
   } else if (platform === 'linux') {
@@ -110,7 +128,11 @@ const trackActiveWindow = (args: WindowsPrepWork | undefined): ActiveWindowInfo 
     throw new Error('Error getting active window info')
   }
 
-  const interaction = InteractionTracker.checkState()
+  const interaction = permissionChecks.inputPermission
+    ? InteractionTracker.checkState()
+      ? 'active'
+      : 'inactive'
+    : 'unknown'
 
   const info: ActiveWindowInfoOnly = {
     ...activeWindowInfo,
@@ -158,14 +180,14 @@ const trackActiveWindow_Windows = (
     const title = textDecoder.decode(out).slice(0, len)
 
     // Get process ID
-    const out2 = [ 0 ] as [ number ]
+    const out2 = [0] as [number]
     GetWindowThreadProcessId(hwnd, out2)
     const pid = out2[0]
 
     // Get window class name
     const out3 = new Uint16Array(512)
     const len2 = GetClassName(hwnd, out3, 512)
-    const className =  textDecoder.decode(out3).slice(0, len2)
+    const className = textDecoder.decode(out3).slice(0, len2)
 
     // Open the process
     const processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, pid)
@@ -175,10 +197,13 @@ const trackActiveWindow_Windows = (
     }
 
     // Get the full process image name
-    
+
     const exeName = new Uint16Array(256)
-    const dwSize  = [ exeName.length ] as [ number ]
-    const executable = QueryFullProcessImageName(processHandle, 0, exeName, dwSize) === 0 ? undefined: textDecoder.decode(exeName).slice(0, dwSize[0])
+    const dwSize = [exeName.length] as [number]
+    const executable =
+      QueryFullProcessImageName(processHandle, 0, exeName, dwSize) === 0
+        ? undefined
+        : textDecoder.decode(exeName).slice(0, dwSize[0])
 
     // Close process handle
     CloseHandle(processHandle)
