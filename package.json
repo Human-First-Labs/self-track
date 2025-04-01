@@ -20,7 +20,8 @@
     "build:mac": "npm run build && electron-builder --mac",
     "build:linux": "npm run build && electron-builder --linux",
     "check-packages": "npx npm-check -u -E",
-    "refresh-packages": "rm -rf node_modules && rm -rf package-lock.json && npm i"
+    "refresh-packages": "rm -rf node_modules && rm -rf package-lock.json && npm i",
+    "electron-rebuild": "electron-rebuild -f"
   },
   "dependencies": {
     "@electron-toolkit/preload": "3.0.1",
