@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, screen } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, screen, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -6,6 +6,7 @@ import { startTracking, endTracking, detectOS } from './logic'
 import { basePath, DataWriter } from './data-consolidation'
 import { RendererToMainChannel, MainToRendererChannel } from './events'
 import { PermissionChecker, PermissionChecks } from './permission-checker'
+import os from 'os'
 // import { ElevatePrivileges } from './admin-privilages'
 
 let mainWindow: BrowserWindow
@@ -98,9 +99,27 @@ app.whenReady().then(() => {
 
   const event4: RendererToMainChannel = 'request-os'
   ipcMain.handle(event4, () => {
-    const platform = detectOS()
-    const event: MainToRendererChannel = 'send-os'
-    mainWindow.webContents.send(event, platform)
+    try {
+      const platform = detectOS()
+      const event: MainToRendererChannel = 'send-os'
+      mainWindow.webContents.send(event, platform)
+    } catch (e) {
+      console.error(e)
+      dialog
+        .showMessageBox({
+          type: 'warning',
+          title: 'Self Track does not support this OS',
+          message: `We've detected that you are using an unsupported OS (${os.platform()}). Please use Linux or Windows to run this application.`,
+          detail:
+            "If you'd like us to support your OS, please open an issue on GitHub (https://github.com/MomoRazor/self-track/issues). We'll try our best!",
+          buttons: ['Close App']
+        })
+        .then((response) => {
+          if (response.response === 0) {
+            app.quit()
+          }
+        })
+    }
   })
 
   const event5: RendererToMainChannel = 'open-exports-directory'

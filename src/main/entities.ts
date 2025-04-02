@@ -1,3 +1,6 @@
+export type SupportedOS = 'win32' | 'linux'
+export const SupportedOSList: SupportedOS[] = ['win32', 'linux']
+
 export interface ActiveWindowInfoOnly {
   title: string
   executable?: string
@@ -16,6 +19,36 @@ export interface ActivityPeriod {
   details: ActiveWindowInfoOnly
 }
 
-// export interface ActionReport{
+export interface FinalReportProjectActivity {
+  project: string
+  periods: {
+    start: number
+    end: number
+    duration: number
+    details: string
+    interactive: 'active' | 'inactive' | 'unknown'
+  }[]
+  totalDuration: number
+}
 
-// }
+export interface FinalReportProgramActivity {
+  program: string
+  executable: string
+  projectPeriods: FinalReportProjectActivity[]
+  totalDuration: number
+}
+
+export interface FinalReport {
+  start: number
+  end: number
+  duration: number
+  activities: FinalReportProgramActivity[]
+}
+
+export interface RuleSet {
+  className: string
+  os: SupportedOS
+  title: string
+  getProjectName: (data: ActivityPeriod) => string
+  getDetails: (data: ActivityPeriod) => string
+}

@@ -8,6 +8,7 @@
 
   let currentActivity = $state<ActivityPeriod | undefined>()
   let recording = $state(false)
+  let errorMessage = $state('')
 
   let os = $state('')
 
@@ -17,7 +18,10 @@
     })
     window.api.sendWindowInfo((_, windowInfo) => {
       currentActivity = windowInfo
-      console.log(currentActivity)
+      errorMessage = ''
+    })
+    window.api.sendTrackingError((_, error) => {
+      errorMessage = error
     })
 
     window.api.requestOs()
@@ -44,7 +48,12 @@
     <button class="hfl-button" onclick={toggleRecording}
       >{recording ? 'Stop' : 'Start'} Recording!</button
     >
-    {#if recording && currentActivity?.id}
+    {#if errorMessage}
+      <div class="current" in:slide={{ axis: 'y' }} out:slide={{ axis: 'y' }}>
+        <h5>Error:</h5>
+        <p class="error">{errorMessage}</p>
+      </div>
+    {:else if recording && currentActivity?.id}
       <div class="current" in:slide={{ axis: 'y' }} out:slide={{ axis: 'y' }}>
         <h5>Current Activity:</h5>
         <div class="row">
@@ -137,5 +146,9 @@
 
   .export-btn {
     color: var(--primary-color);
+  }
+
+  .error {
+    color: var(--error-color);
   }
 </style>

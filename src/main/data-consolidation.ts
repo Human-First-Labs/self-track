@@ -21,8 +21,6 @@ const createDirectories = () => {
     console.error(e)
     fs.mkdirSync(rawPath, { recursive: true })
   }
-
-
 }
 
 const convertActivityToCSV = (data: ActivityPeriod): string => {
@@ -35,11 +33,11 @@ const convertActivityToCSV = (data: ActivityPeriod): string => {
 
 const addLine = async (data: ActivityPeriod): Promise<void> => {
   let dataString = ''
-  if(!currentFile){
+  if (!currentFile) {
     const timestamp = DateTime.now().toFormat('yyyy-MM-dd_HH-mm-ss')
-  
+
     currentFile = `${rawPath}/${timestamp}.csv`
-  
+
     dataString += csvHeader
   }
 
@@ -64,7 +62,7 @@ const updateLastLine = (data: ActivityPeriod): void => {
           className: currentData.className,
           title: currentData.title,
           executable: currentData.executable,
-          interactive: currentData.interactive === 'true' ? true : false
+          interactive: currentData.interactive
         },
         start: DateTime.fromISO(currentData.start).toMillis(),
         end: DateTime.fromISO(currentData.end).toMillis()

@@ -1,5 +1,5 @@
 import os from 'os'
-import { ActiveWindowInfo, ActivityPeriod } from './entities'
+import { ActiveWindowInfo, ActivityPeriod, SupportedOS, SupportedOSList } from './entities'
 import { Tracker } from './window-tracking'
 import { BrowserWindow } from 'electron'
 import { v4 as uuidv4 } from 'uuid'
@@ -25,50 +25,56 @@ export const startTracking = async (args: {
   }
 
   windowInterval = setInterval(async () => {
-    const tracking = Tracker.trackActiveWindow({
-      prep,
-      permissionChecks
-    })
+    try {
+      const tracking = Tracker.trackActiveWindow({
+        prep,
+        permissionChecks
+      })
 
-    const event: MainToRendererChannel = 'send-window-info'
+      let newActivity = false
 
-    let newActivity = false
-
-    if (!previousPoint) {
-      previousPoint = tracking
-      newActivity = true
-    } else {
-      if (previousPoint.hash !== tracking.hash) {
+      if (!previousPoint) {
         previousPoint = tracking
         newActivity = true
-      }
-    }
-
-    if (newActivity) {
-      const id = uuidv4()
-
-      currentActivity = {
-        id,
-        start: DateTime.now().toMillis(),
-        end: DateTime.now().toMillis(),
-        details: {
-          className: tracking.className,
-          interactive: tracking.interactive,
-          title: tracking.title,
-          executable: tracking.executable
+      } else {
+        if (previousPoint.hash !== tracking.hash) {
+          previousPoint = tracking
+          newActivity = true
         }
       }
-      await DataWriter.addLine(currentActivity)
-    } else {
-      if (!currentActivity) {
-        throw new Error('No current activity')
+
+      if (newActivity) {
+        const id = uuidv4()
+
+        currentActivity = {
+          id,
+          start: DateTime.now().toMillis(),
+          end: DateTime.now().toMillis(),
+          details: {
+            className: tracking.className,
+            interactive: tracking.interactive,
+            title: tracking.title,
+            executable: tracking.executable
+          }
+        }
+        await DataWriter.addLine(currentActivity)
+      } else {
+        if (!currentActivity) {
+          throw new Error('No current activity')
+        }
+
+        currentActivity.end = DateTime.now().toMillis()
+        DataWriter.updateLastLine(currentActivity)
       }
 
-      currentActivity.end = DateTime.now().toMillis()
-      DataWriter.updateLastLine(currentActivity)
+      const event: MainToRendererChannel = 'send-window-info'
+      mainWindow.webContents.send(event, currentActivity)
+    } catch (error) {
+      console.error('Error in tracking interval:', error)
+      const event2: MainToRendererChannel = 'tracking-error'
+      // Optionally, you can send an error message to the renderer process
+      mainWindow.webContents.send(event2, 'An error occurred while tracking the active window.')
     }
-
-    mainWindow.webContents.send(event, currentActivity)
   }, 1000)
 }
 
@@ -78,8 +84,12 @@ export const endTracking = (): void => {
   InteractionTracker.end()
 }
 
-export const detectOS = (): string => {
+export const detectOS = (): SupportedOS => {
   const platform = os.platform()
 
-  return platform
+  if (!SupportedOSList.includes(platform as SupportedOS)) {
+    throw new Error(`Unsupported OS: ${platform}`)
+  }
+
+  return platform as SupportedOS
 }

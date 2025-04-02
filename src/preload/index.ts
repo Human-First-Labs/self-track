@@ -16,6 +16,7 @@ export type CustomAPI = {
   ) => void
   sendVersion: (callback: (event: Electron.IpcRendererEvent, version: string) => void) => void
   sendOS: (callback: (event: Electron.IpcRendererEvent, os: string) => void) => void
+  sendTrackingError: (callback: (event: Electron.IpcRendererEvent, error: string) => void) => void
 }
 
 // Custom APIs for renderer
@@ -52,6 +53,10 @@ const api: CustomAPI = {
   },
   sendVersion: (callback): void => {
     const event: MainToRendererChannel = 'send-app-version'
+    ipcRenderer.on(event, callback)
+  },
+  sendTrackingError: (callback): void => {
+    const event: MainToRendererChannel = 'tracking-error'
     ipcRenderer.on(event, callback)
   }
 }
