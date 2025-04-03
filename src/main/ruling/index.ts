@@ -140,9 +140,9 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
   })
 
   if (interactivePeriods.length > 0) {
-    const interactiveDuration = Duration.fromMillis(0)
+    let interactiveDuration = Duration.fromMillis(0)
     interactivePeriods.map((activity) => {
-      interactiveDuration.plus(
+      interactiveDuration = interactiveDuration.plus(
         DateTime.fromMillis(activity.end).diff(DateTime.fromMillis(activity.start))
       )
     })
@@ -159,9 +159,9 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
   })
 
   if (inactivePeriods.length > 0) {
-    const inactiveDuration = Duration.fromMillis(0)
+    let inactiveDuration = Duration.fromMillis(0)
     inactivePeriods.map((activity) => {
-      inactiveDuration.plus(
+      inactiveDuration = inactiveDuration.plus(
         DateTime.fromMillis(activity.end).diff(DateTime.fromMillis(activity.start))
       )
     })
@@ -198,19 +198,19 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
     })
 
     if (existingProgram) {
-      const totalProgramDuration = Duration.fromMillis(existingProgram.totalDurationMillis || 0)
-      totalProgramDuration.plus(currentDuration.toMillis())
+      let totalProgramDuration = Duration.fromMillis(existingProgram.totalDurationMillis || 0)
+      totalProgramDuration = totalProgramDuration.plus(currentDuration.toMillis())
 
-      const totalProgramActiveDuration = Duration.fromMillis(
+      let totalProgramActiveDuration = Duration.fromMillis(
         existingProgram.totalActiveDurationMillis || 0
       )
-      const totalProgramInactiveDuration = Duration.fromMillis(
+      let totalProgramInactiveDuration = Duration.fromMillis(
         existingProgram.totalInactiveDurationMillis || 0
       )
       if (activity.details.interactive === 'active') {
-        totalProgramActiveDuration.plus(currentDuration.toMillis())
+        totalProgramActiveDuration = totalProgramActiveDuration.plus(currentDuration.toMillis())
       } else if (activity.details.interactive === 'inactive') {
-        totalProgramInactiveDuration.plus(currentDuration.toMillis())
+        totalProgramInactiveDuration = totalProgramInactiveDuration.plus(currentDuration.toMillis())
       }
 
       const existingProject = existingProgram.projectPeriods.find((project) => {
@@ -218,19 +218,21 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
       })
 
       if (existingProject) {
-        const totalProjectDuration = Duration.fromMillis(existingProject.totalDurationMillis || 0)
-        totalProjectDuration.plus(currentDuration.toMillis())
+        let totalProjectDuration = Duration.fromMillis(existingProject.totalDurationMillis || 0)
+        totalProjectDuration = totalProjectDuration.plus(currentDuration.toMillis())
 
-        const totalProjectActiveDuration = Duration.fromMillis(
+        let totalProjectActiveDuration = Duration.fromMillis(
           existingProject.totalActiveDurationMillis || 0
         )
-        const totalProjectInactiveDuration = Duration.fromMillis(
+        let totalProjectInactiveDuration = Duration.fromMillis(
           existingProject.totalInactiveDurationMillis || 0
         )
         if (activity.details.interactive === 'active') {
-          totalProjectActiveDuration.plus(currentDuration.toMillis())
+          totalProjectActiveDuration = totalProjectActiveDuration.plus(currentDuration.toMillis())
         } else if (activity.details.interactive === 'inactive') {
-          totalProjectInactiveDuration.plus(currentDuration.toMillis())
+          totalProjectInactiveDuration = totalProjectInactiveDuration.plus(
+            currentDuration.toMillis()
+          )
         }
 
         existingProject.periods.push({
