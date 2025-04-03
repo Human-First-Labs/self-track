@@ -22,33 +22,39 @@ export interface ActivityPeriod {
 export interface FinalReportProjectActivity {
   project: string
   periods: {
-    start: number
-    end: number
-    duration: number
+    startDate: string
+    endDate: string
+    duration: string
     details: string
     interactive: 'active' | 'inactive' | 'unknown'
   }[]
-  totalDuration: number
+  totalDuration: string
+  totalInteractiveDuration?: string
+  totalInactiveDuration?: string
 }
 
 export interface FinalReportProgramActivity {
   program: string
   executable: string
   projectPeriods: FinalReportProjectActivity[]
-  totalDuration: number
+  totalDuration: string
+  totalInteractiveDuration?: string
+  totalInactiveDuration?: string
 }
 
 export interface FinalReport {
-  start: number
-  end: number
-  duration: number
+  startDate: string
+  endDate: string
+  totalDuration: string
+  totalInteractiveDuration?: string
+  totalInactiveDuration?: string
   activities: FinalReportProgramActivity[]
 }
 
 export interface RuleSet {
   className: string
   os: SupportedOS
-  title: string
+  program: string
   getProjectName: (data: ActivityPeriod) => string
   getDetails: (data: ActivityPeriod) => string
 }

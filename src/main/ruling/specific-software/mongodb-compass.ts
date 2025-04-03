@@ -19,7 +19,7 @@ const getProjectName = (info: ActivityPeriod): string => {
   return connectionName
 }
 
-const title = 'MongoDB Compass'
+const program = 'MongoDB Compass'
 const className = 'mongodb compass'
 
 export const mongoDbCompassRules: RuleSet[] = [
@@ -28,13 +28,13 @@ export const mongoDbCompassRules: RuleSet[] = [
     os: 'linux',
     getDetails,
     getProjectName,
-    title
+    program
   },
   {
     className,
     os: 'win32',
     getDetails,
     getProjectName,
-    title
+    program
   }
 ]

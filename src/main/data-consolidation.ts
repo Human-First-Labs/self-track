@@ -13,7 +13,7 @@ let currentFile = ``
 
 const csvHeader = 'id,title,className,executable,interactive,start,end\n'
 
-const createDirectories = () => {
+const createDirectories = (): void => {
   //raw path
   try {
     fs.accessSync(rawPath, fs.constants.F_OK)

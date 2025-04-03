@@ -1,7 +1,6 @@
 import { execSync } from 'child_process'
 import { ActiveWindowInfo, ActiveWindowInfoOnly } from './entities'
 import os from 'os'
-import fs from 'fs'
 import koffi, { inout, KoffiFunction, opaque, out, pointer } from 'koffi'
 import { DataWriter } from './data-consolidation'
 import { InteractionTracker } from './interaction-tracking'
@@ -217,12 +216,6 @@ const trackActiveWindow_Windows = (
     const errorMessage = `Error getting active window info: ${error}`
     console.error(errorMessage)
 
-    try {
-      fs.writeFileSync('window-tracking-error.log', errorMessage + '\n', { flag: 'a' })
-    } catch (logError) {
-      console.error('Failed to write error log:', logError)
-    }
-
     return undefined
   }
 }
@@ -290,7 +283,6 @@ const trackActiveWindow_Linux = (): Omit<ActiveWindowInfoOnly, 'interactive'> | 
   } catch (error) {
     const errorMessage = 'Error getting active window info: ' + error
     console.error(errorMessage)
-    fs.writeFileSync('error.txt', errorMessage)
     return undefined
   }
 }

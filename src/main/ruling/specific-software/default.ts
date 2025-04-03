@@ -8,7 +8,7 @@ const getProjectName = (): string => {
   return ''
 }
 
-const title = 'Unknown Software'
+const program = 'Unknown Software'
 const className = ''
 
 export const defaultRules: RuleSet[] = [
@@ -17,13 +17,13 @@ export const defaultRules: RuleSet[] = [
     os: 'linux',
     getDetails,
     getProjectName,
-    title
+    program
   },
   {
     className,
     os: 'win32',
     getDetails,
     getProjectName,
-    title
+    program
   }
 ]
