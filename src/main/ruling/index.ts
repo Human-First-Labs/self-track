@@ -1,10 +1,121 @@
 import { DateTime, Duration } from 'luxon'
-import { ActivityPeriod, FinalReport } from '../entities'
+import {
+  ActivityPeriod,
+  FinalReport,
+  FinalReportProgramActivity,
+  FinalReportProjectActivity
+} from '../entities'
 import { ruleSets } from './rule-sets'
 import os from 'os'
 
-const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
+interface FunctionalFinalReportProjectActivity extends FinalReportProjectActivity {
+  totalDurationMillis: number
+  totalActiveDurationMillis?: number
+  totalInactiveDurationMillis?: number
+}
+
+interface FunctionalFinalReportProgramActivity extends FinalReportProgramActivity {
+  totalDurationMillis: number
+  totalActiveDurationMillis?: number
+  totalInactiveDurationMillis?: number
+  projectPeriods: FunctionalFinalReportProjectActivity[]
+}
+
+interface FunctionalFinalReport extends FinalReport {
+  activities: FunctionalFinalReportProgramActivity[]
+}
+
+const convertFunctionalFunalReportToFinalReport = (
+  functionalFinalReport: FunctionalFinalReport
+): FinalReport => {
   const finalReport: FinalReport = {
+    activities: [],
+    totalDuration: functionalFinalReport.totalDuration,
+    endDate: functionalFinalReport.endDate,
+    startDate: functionalFinalReport.startDate
+  }
+  functionalFinalReport.activities.forEach((activity) => {
+    const finalReportActivity: FinalReportProgramActivity = {
+      program: activity.program,
+      executable: activity.executable,
+      projectPeriods: [],
+      totalDuration: Duration.fromMillis(activity.totalDurationMillis)
+        .shiftTo('hours', 'minutes', 'seconds')
+        .toHuman({
+          maximumFractionDigits: 0,
+          roundingIncrement: 1
+        })
+    }
+    if (activity.totalActiveDurationMillis) {
+      finalReportActivity.totalActiveDuration = Duration.fromMillis(
+        activity.totalActiveDurationMillis
+      )
+        .shiftTo('hours', 'minutes', 'seconds')
+        .toHuman({
+          maximumFractionDigits: 0,
+          roundingIncrement: 1
+        })
+    }
+    if (activity.totalInactiveDurationMillis) {
+      finalReportActivity.totalInactiveDuration = Duration.fromMillis(
+        activity.totalInactiveDurationMillis
+      )
+        .shiftTo('hours', 'minutes', 'seconds')
+        .toHuman({
+          maximumFractionDigits: 0,
+          roundingIncrement: 1
+        })
+    }
+    activity.projectPeriods.forEach((project) => {
+      const finalReportProject: FinalReportProjectActivity = {
+        project: project.project,
+        periods: [],
+        totalDuration: Duration.fromMillis(project.totalDurationMillis)
+          .shiftTo('hours', 'minutes', 'seconds')
+          .toHuman({
+            maximumFractionDigits: 0,
+            roundingIncrement: 1
+          })
+      }
+
+      if (project.totalActiveDurationMillis) {
+        finalReportProject.totalActiveDuration = Duration.fromMillis(
+          project.totalActiveDurationMillis
+        )
+          .shiftTo('hours', 'minutes', 'seconds')
+          .toHuman({
+            maximumFractionDigits: 0,
+            roundingIncrement: 1
+          })
+      }
+      if (project.totalInactiveDurationMillis) {
+        finalReportProject.totalInactiveDuration = Duration.fromMillis(
+          project.totalInactiveDurationMillis
+        )
+          .shiftTo('hours', 'minutes', 'seconds')
+          .toHuman({
+            maximumFractionDigits: 0,
+            roundingIncrement: 1
+          })
+      }
+      project.periods.forEach((period) => {
+        finalReportProject.periods.push({
+          startDate: period.startDate,
+          endDate: period.endDate,
+          duration: period.duration,
+          details: period.details,
+          interactive: period.interactive
+        })
+      })
+      finalReportActivity.projectPeriods.push(finalReportProject)
+    })
+    finalReport.activities.push(finalReportActivity)
+  })
+  return finalReport
+}
+
+const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
+  const finalReport: FunctionalFinalReport = {
     activities: [],
     totalDuration: '',
     endDate: '',
@@ -35,7 +146,7 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
         DateTime.fromMillis(activity.end).diff(DateTime.fromMillis(activity.start))
       )
     })
-    finalReport.totalInteractiveDuration = interactiveDuration
+    finalReport.totalActiveDuration = interactiveDuration
       .shiftTo('hours', 'minutes', 'seconds')
       .toHuman({
         maximumFractionDigits: 0,
@@ -78,16 +189,50 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
     const program = ruleSet.program
     const projectName = ruleSet.getProjectName(activity)
     const details = ruleSet.getDetails(activity)
-    const existingActivity = finalReport.activities.find((activity) => {
+    const currentDuration = DateTime.fromMillis(activity.end).diff(
+      DateTime.fromMillis(activity.start)
+    )
+
+    const existingProgram = finalReport.activities.find((activity) => {
       return activity.program === program
     })
 
-    if (existingActivity) {
-      const existingProject = existingActivity.projectPeriods.find((project) => {
+    if (existingProgram) {
+      const totalProgramDuration = Duration.fromMillis(existingProgram.totalDurationMillis || 0)
+      totalProgramDuration.plus(currentDuration.toMillis())
+
+      const totalProgramActiveDuration = Duration.fromMillis(
+        existingProgram.totalActiveDurationMillis || 0
+      )
+      const totalProgramInactiveDuration = Duration.fromMillis(
+        existingProgram.totalInactiveDurationMillis || 0
+      )
+      if (activity.details.interactive === 'active') {
+        totalProgramActiveDuration.plus(currentDuration.toMillis())
+      } else if (activity.details.interactive === 'inactive') {
+        totalProgramInactiveDuration.plus(currentDuration.toMillis())
+      }
+
+      const existingProject = existingProgram.projectPeriods.find((project) => {
         return project.project === projectName
       })
 
       if (existingProject) {
+        const totalProjectDuration = Duration.fromMillis(existingProject.totalDurationMillis || 0)
+        totalProjectDuration.plus(currentDuration.toMillis())
+
+        const totalProjectActiveDuration = Duration.fromMillis(
+          existingProject.totalActiveDurationMillis || 0
+        )
+        const totalProjectInactiveDuration = Duration.fromMillis(
+          existingProject.totalInactiveDurationMillis || 0
+        )
+        if (activity.details.interactive === 'active') {
+          totalProjectActiveDuration.plus(currentDuration.toMillis())
+        } else if (activity.details.interactive === 'inactive') {
+          totalProjectInactiveDuration.plus(currentDuration.toMillis())
+        }
+
         existingProject.periods.push({
           startDate: DateTime.fromMillis(activity.start).toFormat('yyyy-LL-dd HH:mm:ss'),
           endDate: DateTime.fromMillis(activity.end).toFormat('yyyy-LL-dd HH:mm:ss'),
@@ -101,27 +246,37 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
           details,
           interactive: activity.details.interactive
         })
+
+        existingProject.totalDurationMillis = totalProjectDuration.toMillis()
+        existingProject.totalActiveDurationMillis = totalProjectActiveDuration.toMillis()
+        existingProject.totalInactiveDurationMillis = totalProjectInactiveDuration.toMillis()
       } else {
-        existingActivity.projectPeriods.push({
+        existingProgram.projectPeriods.push({
           project: projectName,
           periods: [
             {
               startDate: DateTime.fromMillis(activity.start).toFormat('yyyy-LL-dd HH:mm:ss'),
               endDate: DateTime.fromMillis(activity.end).toFormat('yyyy-LL-dd HH:mm:ss'),
-              duration: DateTime.fromMillis(activity.end)
-                .diff(DateTime.fromMillis(activity.start))
-                .shiftTo('hours', 'minutes', 'seconds')
-                .toHuman({
-                  maximumFractionDigits: 0,
-                  roundingIncrement: 1
-                }),
+              duration: currentDuration.shiftTo('hours', 'minutes', 'seconds').toHuman({
+                maximumFractionDigits: 0,
+                roundingIncrement: 1
+              }),
               details,
               interactive: activity.details.interactive
             }
           ],
-          totalDuration: ''
+          totalDuration: '',
+          totalActiveDuration: '',
+          totalInactiveDuration: '',
+          totalDurationMillis: totalProgramDuration.toMillis(),
+          totalActiveDurationMillis: totalProgramActiveDuration.toMillis(),
+          totalInactiveDurationMillis: totalProgramInactiveDuration.toMillis()
         })
       }
+
+      existingProgram.totalDurationMillis = totalProgramDuration.toMillis()
+      existingProgram.totalActiveDurationMillis = totalProgramActiveDuration.toMillis()
+      existingProgram.totalInactiveDurationMillis = totalProgramInactiveDuration.toMillis()
     } else {
       finalReport.activities.push({
         program,
@@ -144,15 +299,29 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
                 interactive: activity.details.interactive
               }
             ],
-            totalDuration: ''
+            totalDuration: '',
+            totalActiveDuration: '',
+            totalInactiveDuration: '',
+            totalDurationMillis: currentDuration.toMillis(),
+            totalActiveDurationMillis:
+              activity.details.interactive === 'active' ? currentDuration.toMillis() : 0,
+            totalInactiveDurationMillis:
+              activity.details.interactive === 'inactive' ? currentDuration.toMillis() : 0
           }
         ],
-        totalDuration: ''
+        totalDuration: '',
+        totalActiveDuration: '',
+        totalInactiveDuration: '',
+        totalDurationMillis: currentDuration.toMillis(),
+        totalActiveDurationMillis:
+          activity.details.interactive === 'active' ? currentDuration.toMillis() : 0,
+        totalInactiveDurationMillis:
+          activity.details.interactive === 'inactive' ? currentDuration.toMillis() : 0
       })
     }
   })
 
-  return finalReport
+  return convertFunctionalFunalReportToFinalReport(finalReport)
 }
 
 export const DataProcessor = {

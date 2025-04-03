@@ -29,7 +29,7 @@ export interface FinalReportProjectActivity {
     interactive: 'active' | 'inactive' | 'unknown'
   }[]
   totalDuration: string
-  totalInteractiveDuration?: string
+  totalActiveDuration?: string
   totalInactiveDuration?: string
 }
 
@@ -38,7 +38,7 @@ export interface FinalReportProgramActivity {
   executable: string
   projectPeriods: FinalReportProjectActivity[]
   totalDuration: string
-  totalInteractiveDuration?: string
+  totalActiveDuration?: string
   totalInactiveDuration?: string
 }
 
@@ -46,7 +46,7 @@ export interface FinalReport {
   startDate: string
   endDate: string
   totalDuration: string
-  totalInteractiveDuration?: string
+  totalActiveDuration?: string
   totalInactiveDuration?: string
   activities: FinalReportProgramActivity[]
 }

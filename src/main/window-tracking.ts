@@ -2,7 +2,6 @@ import { execSync } from 'child_process'
 import { ActiveWindowInfo, ActiveWindowInfoOnly } from './entities'
 import os from 'os'
 import koffi, { inout, KoffiFunction, opaque, out, pointer } from 'koffi'
-import { DataWriter } from './data-consolidation'
 import { InteractionTracker } from './interaction-tracking'
 import { createHash } from 'crypto'
 import { PermissionChecks } from './permission-checker'
@@ -23,8 +22,6 @@ const resetForOs = (): void => {
   if (platform === 'win32') {
     resetForOs_Windows()
   }
-
-  DataWriter.closeCSV()
 }
 
 const resetForOs_Windows = (): void => {
@@ -238,11 +235,11 @@ const trackActiveWindow_Linux = (): Omit<ActiveWindowInfoOnly, 'interactive'> | 
       if (match) {
         windowId = match[0]
 
-        console.log('windowId:', windowId)
+        // console.log('windowId:', windowId)
 
         // Use xwininfo to get additional details if xprop fails
         const xwininfoDetails = execSync(`xwininfo -id ${windowId}`).toString()
-        console.log('xwininfoDetails:', xwininfoDetails)
+        // console.log('xwininfoDetails:', xwininfoDetails)
 
         const titleMatch = xwininfoDetails.match(/xwininfo: Window id: .* "(.*)"/)
         const title = titleMatch ? titleMatch[1] : 'Unknown Title'

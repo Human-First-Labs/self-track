@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain, screen, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { startTracking, endTracking, detectOS } from './logic'
+import { startSession, endSession, detectOS } from './logic'
 import { basePath, DataWriter } from './data-consolidation'
 import { RendererToMainChannel, MainToRendererChannel } from './events'
 import { PermissionChecker, PermissionChecks } from './permission-checker'
@@ -81,14 +81,14 @@ app.whenReady().then(() => {
   // Renderer to Main Calls
   const event1: RendererToMainChannel = 'start-tracking'
   ipcMain.handle(event1, async () => {
-    await startTracking({
+    await startSession({
       mainWindow,
       permissionChecks
     })
   })
 
   const event2: RendererToMainChannel = 'stop-tracking'
-  ipcMain.handle(event2, endTracking)
+  ipcMain.handle(event2, endSession)
 
   const event3: RendererToMainChannel = 'request-version'
   ipcMain.handle(event3, () => {
@@ -148,7 +148,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('quit', () => {
-  endTracking()
+  endSession()
 })
 
 // In this file you can include the rest of your app's specific main process

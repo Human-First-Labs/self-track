@@ -89,13 +89,45 @@ const updateLastLine = (data: ActivityPeriod): void => {
     })
 }
 
-const closeCSV = (): void => {
+const closeCSV = (): string => {
+  const currentFileCopy = currentFile
   currentFile = ''
+  return currentFileCopy
+}
+
+const loadCSV = (filePath: string): Promise<ActivityPeriod[]> => {
+  const parsed: ActivityPeriod[] = []
+
+  return new Promise((resolve, reject) => {
+    fs.createReadStream(filePath)
+      .pipe(csvParser())
+      .on('data', (currentData) =>
+        parsed.push({
+          id: currentData.id,
+          details: {
+            className: currentData.className,
+            title: currentData.title,
+            executable: currentData.executable,
+            interactive: currentData.interactive
+          },
+          start: DateTime.fromISO(currentData.start).toMillis(),
+          end: DateTime.fromISO(currentData.end).toMillis()
+        })
+      )
+      .on('end', () => {
+        resolve(parsed)
+      })
+      .on('error', (error) => {
+        console.error('Error reading CSV file:', error)
+        reject(error)
+      })
+  })
 }
 
 export const DataWriter = {
   createDirectories,
   addLine,
   updateLastLine,
-  closeCSV
+  closeCSV,
+  loadCSV
 }

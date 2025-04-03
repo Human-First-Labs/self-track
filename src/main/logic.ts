@@ -8,12 +8,14 @@ import { DataWriter } from './data-consolidation'
 import { InteractionTracker } from './interaction-tracking'
 import { MainToRendererChannel } from './events'
 import { PermissionChecks } from './permission-checker'
+import { DataProcessor } from './ruling'
+import fs from 'fs'
 
 let windowInterval: string | number | NodeJS.Timeout | undefined
 let previousPoint: ActiveWindowInfo | undefined = undefined
 let currentActivity: ActivityPeriod | undefined = undefined
 
-export const startTracking = async (args: {
+export const startSession = async (args: {
   mainWindow: BrowserWindow
   permissionChecks: PermissionChecks
 }): Promise<void> => {
@@ -78,10 +80,19 @@ export const startTracking = async (args: {
   }, 1000)
 }
 
-export const endTracking = (): void => {
+export const endSession = async (): Promise<void> => {
   clearInterval(windowInterval)
   Tracker.resetForOs()
   InteractionTracker.end()
+  const currentFile = DataWriter.closeCSV()
+
+  if (currentFile) {
+    const data = await DataWriter.loadCSV(currentFile)
+
+    const processedData = DataProcessor.processRawData(data)
+
+    fs.writeFileSync('test.txt', JSON.stringify(processedData), 'utf-8')
+  }
 }
 
 export const detectOS = (): SupportedOS => {

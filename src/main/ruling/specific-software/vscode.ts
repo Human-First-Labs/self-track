@@ -2,36 +2,28 @@ import { ActivityPeriod, RuleSet } from '../../entities'
 import { cleanUpText } from './utils'
 
 const getDetails = (info: ActivityPeriod): string => {
-  const cleanedTitle = cleanUpText(info.details.title)
-
-  const splitTitle = cleanedTitle.split(' - ')
+  const splitTitle = info.details.title.split(' - ')
   const splitTitleLength = splitTitle.length
   if (splitTitleLength === 3) {
-    return splitTitle[0]
+    return cleanUpText(splitTitle[0])
+  } else if (splitTitleLength < 3) {
+    return ''
   } else {
-    console.log('Weird title format here', cleanedTitle)
-    if (splitTitle[0]) {
-      return splitTitle[0]
-    } else {
-      return cleanedTitle
-    }
+    return cleanUpText(info.details.title)
   }
 }
 
 const getProjectName = (info: ActivityPeriod): string => {
-  const cleanedTitle = cleanUpText(info.details.title)
-
-  const splitTitle = cleanedTitle.split(' - ')
+  const splitTitle = info.details.title.split(' - ')
   const splitTitleLength = splitTitle.length
   if (splitTitleLength === 3) {
-    return splitTitle[1]
+    return cleanUpText(splitTitle[1])
+  } else if (splitTitleLength === 2) {
+    return cleanUpText(splitTitle[0])
+  } else if (splitTitleLength < 2) {
+    return ''
   } else {
-    console.log('Weird title format here', cleanedTitle)
-    if (splitTitle[1]) {
-      return splitTitle[1]
-    } else {
-      return cleanedTitle
-    }
+    return cleanUpText(info.details.title)
   }
 }
 
