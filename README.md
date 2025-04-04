@@ -35,7 +35,11 @@ Of course there are positives and negatives to this approach, and I will outline
 
 ## How to use
 
-All you have to do is download the corresponding .zip file to your platform, extract the folder, run the appropriate execution file, start recording, and go about your business.
+First, you must navigate to releases (https://github.com/MomoRazor/self-track/releases),and download the appropriate file for your system.
+
+If you want to use Self-Track on Windows, download the .exe file, while if you are on a linux distribution, download the .deb file. After the download is concluded, run file, which should install Self-Track on your system.
+
+Now just start recording, and go about your business!
 
 Note: For Linux systems, specific permissions must be given to the current user in order for interactivity information to be tracked. This is requested when the program starts. Self-Track can work without it, but interactivity will not be tracked.
 
