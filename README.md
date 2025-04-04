@@ -19,7 +19,7 @@ https://github.com/MomoRazor/self-track/issues
 
 # Why was this built
 
-There are a multitude of tracking apps out there. All of which do a decent job at what they set out to do. However, it has always irked me that something as sensative as what I do on my computer, gets beamed up on the cloud, with only blind faith to hold on to the idea that that information is for my eyes only. Therefore, I set out to build a very simple tracking app, that keeps all data local ALWAYS, and can only distribute its findings if you do so manually. Apart from this, the app is also a 100% open source, so that the process is fully trustless and transparent.
+There are a multitude of tracking apps out there. All of which do a decent job at what they set out to do. However, it has always irked me that something as sensative as what I do on my computer, gets beamed up on the cloud, with only blind faith to hold on to the idea that that information is for my eyes only. Therefore, I set out to build a very simple tracking app, that keeps all data local ALWAYS, and can only distribute its findings if you do so manually. Apart from this, the app is also a 100% open source, so that the process is fully transparent.
 
 Of course there are positives and negatives to this approach, and I will outline them here:
 
@@ -32,7 +32,7 @@ Of course there are positives and negatives to this approach, and I will outline
 ## Negatives
 
 - No Cloud Backup - Of course, keeping everything local does mean that your system is the one and only backup of your data. Users are responsible for backing up their data elsewhere in the event of issues with the device, or the device in question becomes compromised in any way.
-- No Auto Update - The application is forbidden from connecting online, and so it is impossible for it to check if newer version of Self-Track have been updated. We might release version where settings might allow the application to connect to the internet on user confirmation, but this is still in the works and will need careful consideration.
+- No Auto Update - The application is forbidden from connecting online, and so it is impossible for it to check if newer version of Self-Track have been updated. We might release a version where settings might allow the application to connect to the internet on user confirmation, but this is still in the works and will need careful consideration.
 
 ## How to use
 
