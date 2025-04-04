@@ -32,7 +32,6 @@ Of course there are positives and negatives to this approach, and I will outline
 ## Negatives
 
 - No Cloud Backup - Of course, keeping everything local does mean that your system is the one and only backup of your data. Users are responsible for backing up their data elsewhere in the event of issues with the device, or the device in question becomes compromised in any way.
-- No Auto Update - The application is forbidden from connecting online, and so it is impossible for it to check if newer version of Self-Track have been updated. We might release a version where settings might allow the application to connect to the internet on user confirmation, but this is still in the works and will need careful consideration.
 
 ## How to use
 
@@ -55,7 +54,6 @@ We always have ideas to make Self-Track better. Here is a short list of some of 
 - Settings section - This will allow:
   - Editing of interactivity period (defaulted at 20s)
   - Changing where app data is stored
-- A simpler version update path
 - Custom rule creation for certain softwares - This will allow better and more personalized handling of software like internet browsers.
 
 ## Specific Software and Rules
