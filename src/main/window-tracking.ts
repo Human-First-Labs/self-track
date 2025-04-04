@@ -16,6 +16,15 @@ interface WindowsPrepWork {
   CloseHandle: KoffiFunction
 }
 
+const titleCleanUp = (title: string): string => {
+  // Remove numbers in brackets (e.g., "[1]", "(2)")
+  let cleanedText = title.replace(/[[(]\d+[\])]/g, '')
+  // Remove special symbols like "●", "*", "•", etc.
+  cleanedText = cleanedText.replace(/[●•*]/g, '')
+  // Remove extra spaces
+  return cleanedText.replace(/\s+/g, ' ').trim()
+}
+
 const resetForOs = (): void => {
   const platform = os.platform()
 
@@ -132,6 +141,7 @@ const trackActiveWindow = (args: {
 
   const info: ActiveWindowInfoOnly = {
     ...activeWindowInfo,
+    title: titleCleanUp(activeWindowInfo.title),
     interactive: interaction
   }
 
@@ -226,41 +236,13 @@ const trackActiveWindow_Linux = (): Omit<ActiveWindowInfoOnly, 'interactive'> | 
   try {
     // Attempt to get the active window ID using xprop
     let windowId = execSync("xprop -root _NET_ACTIVE_WINDOW | awk '{print $5}'").toString().trim()
+    let title = ''
+    let className = ''
+    let pid = ''
+    let executable = ''
 
-    // If xprop returns 0x0, fall back to xwininfo
-    if (windowId === '0x0') {
-      const xwininfoOutput = execSync('xwininfo -root -tree').toString()
-      const match = xwininfoOutput.match(/0x[0-9a-fA-F]+/)
-
-      if (match) {
-        windowId = match[0]
-
-        // console.log('windowId:', windowId)
-
-        // Use xwininfo to get additional details if xprop fails
-        const xwininfoDetails = execSync(`xwininfo -id ${windowId}`).toString()
-        // console.log('xwininfoDetails:', xwininfoDetails)
-
-        const titleMatch = xwininfoDetails.match(/xwininfo: Window id: .* "(.*)"/)
-        const title = titleMatch ? titleMatch[1] : 'Unknown Title'
-
-        const classNameMatch = xwininfoDetails.match(/Class: (.*)/)
-        const className = classNameMatch ? classNameMatch[1] : 'Unknown Class'
-
-        const pidMatch = xwininfoDetails.match(/Process id: (\d+)/)
-        const pid = pidMatch ? pidMatch[1] : undefined
-
-        const executable = pid
-          ? execSync(`ps -p ${pid} -o comm=`).toString().trim()
-          : 'Unknown Executable'
-
-        return { title, executable, className }
-      } else {
-        throw new Error('Failed to get window ID using xwininfo')
-      }
-    } else {
+    if (windowId !== '0x0') {
       // Try _NET_WM_NAME first, fallback to WM_NAME
-      let title = ''
       try {
         title = execSync(`xprop -id ${windowId} _NET_WM_NAME | awk -F\\" '{print $2}'`)
           .toString()
@@ -269,14 +251,37 @@ const trackActiveWindow_Linux = (): Omit<ActiveWindowInfoOnly, 'interactive'> | 
         title = execSync(`xprop -id ${windowId} WM_NAME | awk -F\\" '{print $2}'`).toString().trim()
       }
 
-      const className = execSync(`xprop -id ${windowId} WM_CLASS | awk -F\\" '{print $2}'`)
+      className = execSync(`xprop -id ${windowId} WM_CLASS | awk -F\\" '{print $2}'`)
         .toString()
         .trim()
-      const pid = execSync(`xprop -id ${windowId} _NET_WM_PID | awk '{print $3}'`).toString().trim()
-      const executable = execSync(`ps -p ${pid} -o comm=`).toString().trim()
-
-      return { title, executable, className }
+      pid = execSync(`xprop -id ${windowId} _NET_WM_PID | awk '{print $3}'`).toString().trim()
+      executable = execSync(`ps -p ${pid} -o comm=`).toString().trim()
     }
+
+    if (!title || !className || !pid) {
+      const xwininfoOutput = execSync('xwininfo -root -tree').toString()
+      const match = xwininfoOutput.match(/0x[0-9a-fA-F]+/)
+
+      if (match) {
+        windowId = match[0]
+
+        // Use xwininfo to get additional details if xprop fails
+        const xwininfoDetails = execSync(`xwininfo -id ${windowId}`).toString()
+        // console.log('xwininfoDetails:', xwininfoDetails)
+
+        const titleMatch = xwininfoDetails.match(/xwininfo: Window id: .* "(.*)"/)
+        title = titleMatch ? titleMatch[1] : ''
+
+        const classNameMatch = xwininfoDetails.match(/Class: (.*)/)
+        className = classNameMatch ? classNameMatch[1] : ''
+
+        const pidMatch = xwininfoDetails.match(/Process id: (\d+)/)
+        pid = pidMatch ? pidMatch[1] : ''
+
+        executable = pid ? execSync(`ps -p ${pid} -o comm=`).toString().trim() : ''
+      }
+    }
+    return { title, executable, className }
   } catch (error) {
     const errorMessage = 'Error getting active window info: ' + error
     console.error(errorMessage)

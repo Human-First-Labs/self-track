@@ -3,6 +3,7 @@ import { chromeRules } from './specific-software/chrome'
 import { defaultRules } from './specific-software/default'
 import { mongoDbCompassRules } from './specific-software/mongodb-compass'
 import { selfTrackRules } from './specific-software/self-track'
+import { virtualBoxRules } from './specific-software/virtualbox'
 import { vsCodeRules } from './specific-software/vscode'
 
 export const ruleSets: RuleSet[] = [
@@ -10,5 +11,6 @@ export const ruleSets: RuleSet[] = [
   ...selfTrackRules,
   ...chromeRules,
   ...mongoDbCompassRules,
-  ...vsCodeRules
+  ...vsCodeRules,
+  ...virtualBoxRules
 ]

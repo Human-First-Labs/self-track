@@ -48,9 +48,11 @@ export const startSession = async (args: {
       if (newActivity) {
         const id = uuidv4()
 
+        const previousActivity = currentActivity
+
         currentActivity = {
           id,
-          start: DateTime.now().toMillis(),
+          start: previousActivity ? previousActivity.end : DateTime.now().toMillis(),
           end: DateTime.now().toMillis(),
           details: {
             className: tracking.className,

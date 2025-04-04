@@ -1,11 +1,10 @@
 import { ActivityPeriod, RuleSet } from '../../entities'
-import { cleanUpNumbersBetweenBrackets, cleanUpText } from './utils'
 
 const getDetails = (info: ActivityPeriod): string => {
-  let cleanedTitle = cleanUpText(info.details.title)
+  let cleanedTitle = info.details.title
   cleanedTitle = cleanedTitle.replace(' - Google Chrome', '')
 
-  return cleanUpNumbersBetweenBrackets(cleanedTitle)
+  return cleanedTitle
 }
 
 const getProjectName = (): string => {
@@ -13,18 +12,18 @@ const getProjectName = (): string => {
 }
 
 const program = 'Google Chrome'
-const className = 'google-chrome'
+const classNames = ['google-chrome']
 
 export const chromeRules: RuleSet[] = [
   {
-    className,
+    classNames,
     os: 'linux',
     getDetails,
     getProjectName,
     program
   },
   {
-    className,
+    classNames,
     os: 'win32',
     getDetails,
     getProjectName,

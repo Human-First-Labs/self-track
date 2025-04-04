@@ -1,8 +1,7 @@
 import { ActivityPeriod, RuleSet } from '../../entities'
-import { cleanUpText } from './utils'
 
 const getDetails = (info: ActivityPeriod): string => {
-  let cleanedTitle = cleanUpText(info.details.title)
+  let cleanedTitle = info.details.title
   cleanedTitle = cleanedTitle.replace('MongoDB Compass - ', '')
 
   const databaseAndTableName = cleanedTitle.split('/')[1]
@@ -11,7 +10,7 @@ const getDetails = (info: ActivityPeriod): string => {
 }
 
 const getProjectName = (info: ActivityPeriod): string => {
-  let cleanedTitle = cleanUpText(info.details.title)
+  let cleanedTitle = info.details.title
   cleanedTitle = cleanedTitle.replace('MongoDB Compass - ', '')
 
   const connectionName = cleanedTitle.split('/')[0]
@@ -20,18 +19,18 @@ const getProjectName = (info: ActivityPeriod): string => {
 }
 
 const program = 'MongoDB Compass'
-const className = 'mongodb compass'
+const classNames = ['mongodb compass']
 
 export const mongoDbCompassRules: RuleSet[] = [
   {
-    className,
+    classNames,
     os: 'linux',
     getDetails,
     getProjectName,
     program
   },
   {
-    className,
+    classNames,
     os: 'win32',
     getDetails,
     getProjectName,

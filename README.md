@@ -1,10 +1,10 @@
 # self-track
 
-A simple, secure and safe way to keep track of what you are working on, currently on Windows and Linux.
+A simple, secure and safe way to keep track of what you are working on when using your computer.
 
 # Distributions
 
-Current Version: 0.1.0
+Current Version: 0.2.0
 
 Obtainable from right here - https://github.com/MomoRazor/self-track/releases
 
@@ -36,15 +36,27 @@ Of course there are positives and negatives to this approach, and I will outline
 
 ## How to use
 
-All you have to do is download the corresponding to your platform, start recording, and go about your business.
+All you have to do is download the corresponding .zip file to your platform, start recording, and go about your business.
 
-Note: For Linux systems, specific permissions must be given to the current user in order for interactivity information to be tracked. This is outlined when the program starts. Self-Track can work without it, but interactivity will not be tracked.
+Note: For Linux systems, specific permissions must be given to the current user in order for interactivity information to be tracked. This is requested when the program starts. Self-Track can work without it, but interactivity will not be tracked.
 
-Data is stored in userData directory of your system, and it is easily reachable from within the Application for easy of use.
+Data is stored in userData directory of your system, and it is easily reachable from within the Application for easy of use. This data is saved in a .xls file and can be browsed with any software that supports .XLS or .XLSX.
 
 # Feedback and Contribution
 
 Help us improve and extend Self-Track by logging bug reports here - https://github.com/MomoRazor/self-track/issues
+
+# Current Roadmap
+
+We always have ideas to make Self-Track better. Here is a short list of some of our ideas moving forward:
+
+- Wayland window support (this will probably decrease significantly the list of softwares we cannot detect on Linux)
+- Support for MacOS
+- Settings section - This will allow:
+  - Editing of interactivity period (defaulted at 20s)
+  - Changing where app data is stored
+- A simpler version update path
+- Custom rule creation for certain softwares - This will allow better and more personalized handling of software like internet browsers.
 
 ## Specific Software and Rules
 

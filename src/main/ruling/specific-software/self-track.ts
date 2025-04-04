@@ -9,18 +9,18 @@ const getProjectName = (): string => {
 }
 
 const program = 'Self Track (Me :D!)'
-const className = 'self-track'
+const classNames = ['self-track']
 
 export const selfTrackRules: RuleSet[] = [
   {
-    className,
+    classNames,
     os: 'linux',
     getDetails,
     getProjectName,
     program
   },
   {
-    className,
+    classNames,
     os: 'win32',
     getDetails,
     getProjectName,

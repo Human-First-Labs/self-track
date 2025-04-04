@@ -52,7 +52,7 @@ export interface FinalReport {
 }
 
 export interface RuleSet {
-  className: string
+  classNames: string[]
   os: SupportedOS
   program: string
   getProjectName: (data: ActivityPeriod) => string

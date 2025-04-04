@@ -176,10 +176,12 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
   rawData.forEach((activity) => {
     const ruleSet =
       ruleSets.find((ruleSet) => {
-        return ruleSet.className === activity.details.className && ruleSet.os === os.platform()
+        return (
+          ruleSet.classNames.includes(activity.details.className) && ruleSet.os === os.platform()
+        )
       }) ||
       ruleSets.find((ruleSet) => {
-        return ruleSet.className === '' && ruleSet.os === os.platform()
+        return ruleSet.classNames.includes('') && ruleSet.os === os.platform()
       })
 
     if (!ruleSet) {
