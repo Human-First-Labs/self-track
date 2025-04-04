@@ -23,7 +23,7 @@
     "check-packages": "npx npm-check -u -E",
     "refresh-packages": "rm -rf node_modules && rm -rf package-lock.json && npm i",
     "electron-rebuild": "electron-rebuild -f",
-    "generate-distributions": "npm run build:all && zip -r /dist/linux-v{add}.zip ./dist/linux-unpacked && zip -r /dist/win-v{add}.zip ./dist/win-unpacked"
+    "generate-distributions": "npm run build:all && zip -r ./dist/linux-v{add}.zip ./dist/linux-unpacked && zip -r ./dist/win-v{add}.zip ./dist/win-unpacked"
   },
   "dependencies": {
     "@electron-toolkit/preload": "3.0.1",

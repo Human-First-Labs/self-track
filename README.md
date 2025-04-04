@@ -27,16 +27,16 @@ Of course there are positives and negatives to this approach, and I will outline
 
 - Security and Safety (as aforementioned)
 - Growth - Given its open source nature, all the positives that come with open source projects are given to this app. Consistant updates, continuous feedback and fresh new ideas are all valid and encouraged ways to contribute to Self-Track.
-- Unexploitable - Tracking Apps have a long history of being used by employers to micro-manage their employees, being annoying at best and exploitative at worst. With Self-Track, this is impossible, since the data Self-Track gathers will ALWAYS be available to you only, and will only be deliverable to someone else later.
+- Unexploitable - Tracking Apps have a long history of being used by employers to micro-manage their employees, being annoying at best and exploitative at worst. With Self-Track, this is impossible, since the data Self-Track gathers will ALWAYS be available to you only. It is up to you and only you, to share it with someone else.
 
 ## Negatives
 
-- No Cloud Backup - Of course, keeping everything local does mean that your system is the one and only backup of your data. Users are responsible to backup their data elsewhere in the event of issues with the device, or the device in question becomes compromised in any way.
+- No Cloud Backup - Of course, keeping everything local does mean that your system is the one and only backup of your data. Users are responsible for backing up their data elsewhere in the event of issues with the device, or the device in question becomes compromised in any way.
 - No Auto Update - The application is forbidden from connecting online, and so it is impossible for it to check if newer version of Self-Track have been updated. We might release version where settings might allow the application to connect to the internet on user confirmation, but this is still in the works and will need careful consideration.
 
 ## How to use
 
-All you have to do is download the corresponding .zip file to your platform, start recording, and go about your business.
+All you have to do is download the corresponding .zip file to your platform, extract the folder, run the appropriate execution file, start recording, and go about your business.
 
 Note: For Linux systems, specific permissions must be given to the current user in order for interactivity information to be tracked. This is requested when the program starts. Self-Track can work without it, but interactivity will not be tracked.
 
@@ -69,7 +69,7 @@ Self-Track uses a system of Rules to support specific softwares in a more user r
 | MongoDb Compass    | Supported | Supported |
 | Virtual Box        | Supported | Supported |
 
-You can easily contribute to this list by suggesting new software that should be supported. You can even go one step further and if you have said software installed, record yourself using the software in question with Self-Track and submit that information to us. We'll use it to build rules so that raw data turned into simple to read and digest information.
+You can easily contribute to this list by suggesting new software that should be supported. You can even go one step further and if you have said software installed, record yourself using the software in question with Self-Track and submit that information to us. We'll use it to build rules which turn raw data into simple-to-read and digestable information.
 
 ## Specific Software we cannot detect
 
