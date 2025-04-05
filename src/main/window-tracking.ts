@@ -211,6 +211,10 @@ const trackActiveWindow_Windows = (
         ? undefined
         : textDecoder.decode(exeName).slice(0, dwSize[0])
 
+    if (!executable) {
+      throw new Error(`Failed to get executable name for PID: ${pid}`)
+    }
+
     // Close process handle
     CloseHandle(processHandle)
 
@@ -258,9 +262,11 @@ const trackActiveWindow_Linux = (): Omit<ActiveWindowInfoOnly, 'interactive'> | 
       executable = execSync(`ps -p ${pid} -o comm=`).toString().trim()
     }
 
-    if (!title 
-      // || !className 
-      || !pid) {
+    if (
+      !title ||
+      // || !className
+      !pid
+    ) {
       const xwininfoOutput = execSync('xwininfo -root -tree').toString()
       const match = xwininfoOutput.match(/0x[0-9a-fA-F]+/)
 
@@ -283,8 +289,10 @@ const trackActiveWindow_Linux = (): Omit<ActiveWindowInfoOnly, 'interactive'> | 
         executable = pid ? execSync(`ps -p ${pid} -o comm=`).toString().trim() : ''
       }
     }
-    return { title, executable, 
-      // className 
+    return {
+      title,
+      executable
+      // className
     }
   } catch (error) {
     const errorMessage = 'Error getting active window info: ' + error
