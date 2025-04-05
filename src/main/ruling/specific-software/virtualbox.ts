@@ -26,23 +26,25 @@ const getProjectName = (info: ActivityPeriod): string => {
 }
 
 const program = 'VirtualBox'
-const classNames: string[] = [
-  'VirtualBox Manager',
-  'VirtualBox',
-  'VirtualBox Machine',
-  'VirtualBoxVM'
-]
+// const classNames: string[] = [
+//   'VirtualBox Manager',
+//   'VirtualBox',
+//   'VirtualBox Machine',
+//   'VirtualBoxVM'
+// ]
 
 export const virtualBoxRules: RuleSet[] = [
   {
-    classNames,
+    // classNames,
+    executableNames: ['VirtualBox', 'VirtualBoxVM'],
     os: 'linux',
     getDetails,
     getProjectName,
     program
   },
   {
-    classNames,
+    // classNames,
+    executableNames: ['VirtualBox.exe'],
     os: 'win32',
     getDetails,
     getProjectName,

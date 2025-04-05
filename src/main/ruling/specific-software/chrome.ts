@@ -12,18 +12,20 @@ const getProjectName = (): string => {
 }
 
 const program = 'Google Chrome'
-const classNames = ['google-chrome']
+// const classNames = ['google-chrome']
 
 export const chromeRules: RuleSet[] = [
   {
-    classNames,
+    // classNames,
+    executableNames: ['chrome'],
     os: 'linux',
     getDetails,
     getProjectName,
     program
   },
   {
-    classNames,
+    // classNames,
+    executableNames: ['chrome.exe'],
     os: 'win32',
     getDetails,
     getProjectName,

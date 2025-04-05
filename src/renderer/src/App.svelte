@@ -64,10 +64,10 @@
           <strong>Executable:</strong>
           <p>{currentActivity.details.executable}</p>
         </div>
-        <div class="row">
+        <!-- <div class="row">
           <strong>Class:</strong>
           <p>{currentActivity.details.className}</p>
-        </div>
+        </div> -->
         <div class="row">
           <strong>Interactive:</strong>
           <p>{currentActivity.details.interactive}</p>

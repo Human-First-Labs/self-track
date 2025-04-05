@@ -8,21 +8,12 @@ const getProjectName = (): string => {
   return ''
 }
 
-const program = 'Unknown Software'
-// const classNames = ['']
+const program = 'Windows Explorer'
 
-export const defaultRules: RuleSet[] = [
+export const windowExplorerRules: RuleSet[] = [
   {
     // classNames,
-    executableNames: [],
-    os: 'linux',
-    getDetails,
-    getProjectName,
-    program
-  },
-  {
-    // classNames,
-    executableNames: [],
+    executableNames: ['explorer.exe'],
     os: 'win32',
     getDetails,
     getProjectName,

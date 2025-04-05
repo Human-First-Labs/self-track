@@ -1,20 +1,21 @@
 import { ActivityPeriod, RuleSet } from '../../entities'
 
 const getDetails = (info: ActivityPeriod): string => {
-  return info.details.title
+    let cleanedTitle = info.details.title
+    cleanedTitle = cleanedTitle.replace(' - Discord', '')
+    return cleanedTitle
 }
 
 const getProjectName = (): string => {
   return ''
 }
 
-const program = 'Unknown Software'
-// const classNames = ['']
+const program = 'Discord'
 
-export const defaultRules: RuleSet[] = [
+export const discordRules: RuleSet[] = [
   {
     // classNames,
-    executableNames: [],
+    executableNames: ['discord'],
     os: 'linux',
     getDetails,
     getProjectName,
@@ -22,7 +23,7 @@ export const defaultRules: RuleSet[] = [
   },
   {
     // classNames,
-    executableNames: [],
+    executableNames: ['Discord.exe'],
     os: 'win32',
     getDetails,
     getProjectName,

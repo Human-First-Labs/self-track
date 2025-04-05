@@ -27,18 +27,20 @@ const getProjectName = (info: ActivityPeriod): string => {
 }
 
 const program = 'Visual Studio Code'
-const classNames = ['code']
+// const classNames = ['code']
 
 export const vsCodeRules: RuleSet[] = [
   {
-    classNames,
+    // classNames,
+    executableNames: ['code'],
     os: 'linux',
     getDetails,
     getProjectName,
     program
   },
   {
-    classNames,
+    // classNames,
+    executableNames: ['Code.exe'],
     os: 'win32',
     getDetails,
     getProjectName,

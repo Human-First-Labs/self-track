@@ -176,12 +176,13 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
   rawData.forEach((activity) => {
     const ruleSet =
       ruleSets.find((ruleSet) => {
-        return (
-          ruleSet.classNames.includes(activity.details.className) && ruleSet.os === os.platform()
-        )
+        // Check if at least one executableName is present in the activity.details.executable and the OS matches
+        return ruleSet.executableNames.some((executableName) => {
+          return activity.details.executable.includes(executableName)
+        }) && ruleSet.os === os.platform()
       }) ||
       ruleSets.find((ruleSet) => {
-        return ruleSet.classNames.includes('') && ruleSet.os === os.platform()
+        return ruleSet.executableNames.length === 0 && ruleSet.os === os.platform()
       })
 
     if (!ruleSet) {
