@@ -4,7 +4,7 @@ A simple, secure and safe way to keep track of what you are working on when usin
 
 # Distributions
 
-Current Version: 0.2.0
+Current Version: 0.3.0
 
 Obtainable from right here - https://github.com/MomoRazor/self-track/releases
 
