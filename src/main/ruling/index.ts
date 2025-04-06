@@ -1,13 +1,16 @@
-import { DateTime, Duration } from 'luxon'
+import { DateTime, Duration } from 'luxon' // Library for date and time manipulation
 import {
   ActivityPeriod,
   FinalReport,
   FinalReportProgramActivity,
   FinalReportProjectActivity
-} from '../entities'
-import { ruleSets } from './rule-sets'
-import os from 'os'
+} from '../entities' // Importing types for activity and report structures
+import { ruleSets } from './rule-sets' // Rule sets for categorizing activities
+import os from 'os' // Module to detect the operating system
+import ExcelJS from 'exceljs' // Library for generating Excel files
+import { reportPath } from '../data-consolidation' // Path for storing reports
 
+// Extended interfaces to include duration in milliseconds for internal calculations
 interface FunctionalFinalReportProjectActivity extends FinalReportProjectActivity {
   totalDurationMillis: number
   totalActiveDurationMillis?: number
@@ -25,6 +28,7 @@ interface FunctionalFinalReport extends FinalReport {
   activities: FunctionalFinalReportProgramActivity[]
 }
 
+// Function to convert an internal functional report to the final report format
 const convertFunctionalFunalReportToFinalReport = (
   functionalFinalReport: FunctionalFinalReport
 ): FinalReport => {
@@ -34,6 +38,8 @@ const convertFunctionalFunalReportToFinalReport = (
     endDate: functionalFinalReport.endDate,
     startDate: functionalFinalReport.startDate
   }
+
+  // Process each activity in the functional report
   functionalFinalReport.activities.forEach((activity) => {
     const finalReportActivity: FinalReportProgramActivity = {
       program: activity.program,
@@ -46,6 +52,8 @@ const convertFunctionalFunalReportToFinalReport = (
           roundingIncrement: 1
         })
     }
+
+    // Add active and inactive durations if available
     if (activity.totalActiveDurationMillis) {
       finalReportActivity.totalActiveDuration = Duration.fromMillis(
         activity.totalActiveDurationMillis
@@ -66,6 +74,8 @@ const convertFunctionalFunalReportToFinalReport = (
           roundingIncrement: 1
         })
     }
+
+    // Process each project within the activity
     activity.projectPeriods.forEach((project) => {
       const finalReportProject: FinalReportProjectActivity = {
         project: project.project,
@@ -78,6 +88,7 @@ const convertFunctionalFunalReportToFinalReport = (
           })
       }
 
+      // Add active and inactive durations for the project if available
       if (project.totalActiveDurationMillis) {
         finalReportProject.totalActiveDuration = Duration.fromMillis(
           project.totalActiveDurationMillis
@@ -98,6 +109,8 @@ const convertFunctionalFunalReportToFinalReport = (
             roundingIncrement: 1
           })
       }
+
+      // Add each period to the project
       project.periods.forEach((period) => {
         finalReportProject.periods.push({
           startDate: period.startDate,
@@ -107,13 +120,17 @@ const convertFunctionalFunalReportToFinalReport = (
           interactive: period.interactive
         })
       })
+
       finalReportActivity.projectPeriods.push(finalReportProject)
     })
+
     finalReport.activities.push(finalReportActivity)
   })
+
   return finalReport
 }
 
+// Function to process raw activity data into a final report
 const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
   const finalReport: FunctionalFinalReport = {
     activities: [],
@@ -122,6 +139,7 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
     startDate: ''
   }
 
+  // Determine the start and end times of the report
   const firstPeriod = rawData[0]
   const lastPeriod = rawData[rawData.length - 1]
 
@@ -135,13 +153,11 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
       roundingIncrement: 1
     })
 
-  const interactivePeriods = rawData.filter((activity) => {
-    return activity.details.interactive === 'active'
-  })
-
+  // Calculate total active and inactive durations
+  const interactivePeriods = rawData.filter((activity) => activity.details.interactive === 'active')
   if (interactivePeriods.length > 0) {
     let interactiveDuration = Duration.fromMillis(0)
-    interactivePeriods.map((activity) => {
+    interactivePeriods.forEach((activity) => {
       interactiveDuration = interactiveDuration.plus(
         DateTime.fromMillis(activity.end).diff(DateTime.fromMillis(activity.start))
       )
@@ -154,13 +170,10 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
       })
   }
 
-  const inactivePeriods = rawData.filter((activity) => {
-    return activity.details.interactive === 'inactive'
-  })
-
+  const inactivePeriods = rawData.filter((activity) => activity.details.interactive === 'inactive')
   if (inactivePeriods.length > 0) {
     let inactiveDuration = Duration.fromMillis(0)
-    inactivePeriods.map((activity) => {
+    inactivePeriods.forEach((activity) => {
       inactiveDuration = inactiveDuration.plus(
         DateTime.fromMillis(activity.end).diff(DateTime.fromMillis(activity.start))
       )
@@ -173,13 +186,13 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
       })
   }
 
+  // Process each activity and categorize it based on rule sets
   rawData.forEach((activity) => {
     const ruleSet =
       ruleSets.find((ruleSet) => {
-        // Check if at least one executableName is present in the activity.details.executable and the OS matches
-        return ruleSet.executableNames.some((executableName) => {
-          return activity.details.executable.includes(executableName)
-        }) && ruleSet.os === os.platform()
+        return ruleSet.executableNames.some((executableName) =>
+          activity.details.executable.includes(executableName)
+        ) && ruleSet.os === os.platform()
       }) ||
       ruleSets.find((ruleSet) => {
         return ruleSet.executableNames.length === 0 && ruleSet.os === os.platform()
@@ -196,11 +209,11 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
       DateTime.fromMillis(activity.start)
     )
 
-    const existingProgram = finalReport.activities.find((activity) => {
-      return activity.program === program
-    })
+    // Check if the program already exists in the report
+    const existingProgram = finalReport.activities.find((activity) => activity.program === program)
 
     if (existingProgram) {
+      // Update existing program data
       let totalProgramDuration = Duration.fromMillis(existingProgram.totalDurationMillis || 0)
       totalProgramDuration = totalProgramDuration.plus(currentDuration.toMillis())
 
@@ -216,11 +229,13 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
         totalProgramInactiveDuration = totalProgramInactiveDuration.plus(currentDuration.toMillis())
       }
 
-      const existingProject = existingProgram.projectPeriods.find((project) => {
-        return project.project === projectName
-      })
+      // Check if the project already exists within the program
+      const existingProject = existingProgram.projectPeriods.find(
+        (project) => project.project === projectName
+      )
 
       if (existingProject) {
+        // Update existing project data
         let totalProjectDuration = Duration.fromMillis(existingProject.totalDurationMillis || 0)
         totalProjectDuration = totalProjectDuration.plus(currentDuration.toMillis())
 
@@ -238,16 +253,14 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
           )
         }
 
+        // Add the period to the project
         existingProject.periods.push({
           startDate: DateTime.fromMillis(activity.start).toFormat('yyyy-LL-dd HH:mm:ss'),
           endDate: DateTime.fromMillis(activity.end).toFormat('yyyy-LL-dd HH:mm:ss'),
-          duration: DateTime.fromMillis(activity.end)
-            .diff(DateTime.fromMillis(activity.start))
-            .shiftTo('hours', 'minutes', 'seconds')
-            .toHuman({
-              maximumFractionDigits: 0,
-              roundingIncrement: 1
-            }),
+          duration: currentDuration.shiftTo('hours', 'minutes', 'seconds').toHuman({
+            maximumFractionDigits: 0,
+            roundingIncrement: 1
+          }),
           details,
           interactive: activity.details.interactive
         })
@@ -256,6 +269,7 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
         existingProject.totalActiveDurationMillis = totalProjectActiveDuration.toMillis()
         existingProject.totalInactiveDurationMillis = totalProjectInactiveDuration.toMillis()
       } else {
+        // Add a new project to the program
         existingProgram.projectPeriods.push({
           project: projectName,
           periods: [
@@ -283,6 +297,7 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
       existingProgram.totalActiveDurationMillis = totalProgramActiveDuration.toMillis()
       existingProgram.totalInactiveDurationMillis = totalProgramInactiveDuration.toMillis()
     } else {
+      // Add a new program to the report
       finalReport.activities.push({
         program,
         executable: activity.details.executable || '',
@@ -329,6 +344,47 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
   return convertFunctionalFunalReportToFinalReport(finalReport)
 }
 
+// Function to generate a final Excel report from the processed data
+const generateFinalExcelReport = async (data: FinalReport, rawName: string): Promise<void> => {
+  const workbook = new ExcelJS.Workbook(); // Create a new workbook
+  const worksheet = workbook.addWorksheet('Activity Data'); // Add a worksheet
+
+  // Add headers to the worksheet
+  worksheet.columns = [
+    { header: 'Program', key: 'program', width: 30 },
+    { header: 'Executable', key: 'executable', width: 50 },
+    { header: 'Project', key: 'project', width: 20 },
+    { header: 'Start Date', key: 'startDate', width: 20 },
+    { header: 'End Date', key: 'endDate', width: 20 },
+    { header: 'Duration', key: 'duration', width: 25 },
+    { header: 'Details', key: 'details', width: 40 },
+    { header: 'Interactive', key: 'interactive', width: 15 },
+  ]
+
+  // Loop through the activities and add rows to the worksheet
+  data.activities.forEach((activity: any) => {
+    activity.projectPeriods.forEach((projectPeriod: any) => {
+      projectPeriod.periods.forEach((period: any) => {
+        worksheet.addRow({
+          program: activity.program,
+          executable: activity.executable,
+          project: projectPeriod.project || 'N/A',
+          startDate: period.startDate,
+          endDate: period.endDate,
+          duration: period.duration,
+          details: period.details,
+          interactive: period.interactive,
+        })
+      })
+    })
+  })
+
+  // Write the workbook to a file
+  await workbook.xlsx.writeFile(reportPath + `/activity_report_${rawName}.xlsx`) // Specify the output file path
+}
+
+// Export the DataProcessor object with the defined functions
 export const DataProcessor = {
-  processRawData
+  processRawData, // Process raw activity data
+  generateFinalExcelReport // Generate an Excel report
 }

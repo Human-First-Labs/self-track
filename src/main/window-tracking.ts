@@ -6,6 +6,7 @@ import { InteractionTracker } from './interaction-tracking'
 import { createHash } from 'crypto'
 import { PermissionChecks } from './permission-checker'
 
+// Interface defining the structure for Windows-specific preparation work
 interface WindowsPrepWork {
   GetForegroundWindow: KoffiFunction
   GetWindowThreadProcessId: KoffiFunction
@@ -15,6 +16,7 @@ interface WindowsPrepWork {
   CloseHandle: KoffiFunction
 }
 
+// Function to clean up window titles by removing unnecessary characters
 const titleCleanUp = (title: string): string => {
   // Remove numbers in brackets (e.g., "[1]", "(2)")
   let cleanedText = title.replace(/[[(]\d+[\])]/g, '')
@@ -24,6 +26,7 @@ const titleCleanUp = (title: string): string => {
   return cleanedText.replace(/\s+/g, ' ').trim()
 }
 
+// Function to reset OS-specific configurations
 const resetForOs = (): void => {
   const platform = os.platform()
 
@@ -32,10 +35,12 @@ const resetForOs = (): void => {
   }
 }
 
+// Function to reset Windows-specific configurations
 const resetForOs_Windows = (): void => {
   koffi.reset()
 }
 
+// Function to prepare OS-specific configurations
 const prepForOs = (): WindowsPrepWork | undefined => {
   const platform = os.platform()
 
@@ -48,6 +53,7 @@ const prepForOs = (): WindowsPrepWork | undefined => {
   return setup
 }
 
+// Function to prepare Windows-specific configurations
 const prepForOs_Windows = (): WindowsPrepWork => {
   // Define Windows-specific types
   const cHWND = pointer('HWND', opaque())
@@ -64,6 +70,7 @@ const prepForOs_Windows = (): WindowsPrepWork => {
   const user32 = koffi.load('user32.dll')
   const kernel32 = koffi.load('kernel32.dll')
 
+  // Define Windows API functions
   const user32Function = user32.func
   const kernel32Function = kernel32.func
 
@@ -91,6 +98,7 @@ const prepForOs_Windows = (): WindowsPrepWork => {
 
   const CloseHandle = kernel32Function('CloseHandle', cBOOL, [cHANDLE])
 
+  // Return the prepared Windows API functions
   return {
     GetForegroundWindow,
     GetWindowThreadProcessId,
@@ -101,6 +109,7 @@ const prepForOs_Windows = (): WindowsPrepWork => {
   }
 }
 
+// Function to track the active window based on the OS
 const trackActiveWindow = (args: {
   prep: WindowsPrepWork | undefined
   permissionChecks: PermissionChecks
@@ -129,18 +138,21 @@ const trackActiveWindow = (args: {
     throw new Error('Error getting active window info')
   }
 
+  // Determine interaction state based on permissions
   const interaction = permissionChecks.inputPermission
     ? InteractionTracker.checkState()
       ? 'active'
       : 'inactive'
     : 'unknown'
 
+  // Clean up the title and add interaction state
   const info: ActiveWindowInfoOnly = {
     ...activeWindowInfo,
     title: titleCleanUp(activeWindowInfo.title),
     interactive: interaction
   }
 
+  // Generate a hash for the active window info
   const hash = createHash('md5').update(JSON.stringify(info)).digest('hex')
 
   return {
@@ -149,6 +161,7 @@ const trackActiveWindow = (args: {
   }
 }
 
+// Function to track the active window on Windows
 const trackActiveWindow_Windows = (
   args: WindowsPrepWork
 ): Omit<ActiveWindowInfoOnly, 'interactive'> | undefined => {
@@ -164,10 +177,11 @@ const trackActiveWindow_Windows = (
   const textDecoder = new TextDecoder('utf-16')
 
   try {
-    // Constants
+    // Constants for process access
     const PROCESS_QUERY_INFORMATION = 0x0400
     const PROCESS_VM_READ = 0x0010
 
+    // Get the handle of the foreground window
     const hwnd = GetForegroundWindow()
 
     if (!hwnd) {
@@ -175,25 +189,23 @@ const trackActiveWindow_Windows = (
       return undefined
     }
 
-    // Get window title
+    // Get the window title
     const out = new Uint16Array(512)
     const len = GetWindowText(hwnd, out, 512)
     const title = textDecoder.decode(out).slice(0, len)
 
-    // Get process ID
+    // Get the process ID of the window
     const out2 = [0] as [number]
     GetWindowThreadProcessId(hwnd, out2)
     const pid = out2[0]
 
-    // Open the process
+    // Open the process to retrieve additional information
     const processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, pid)
     if (!processHandle) {
-      // Maybe the process ended in-between?
       throw new Error(`Failed to open process for PID: ${pid}`)
     }
 
-    // Get the full process image name
-
+    // Get the full process image name (executable path)
     const exeName = new Uint16Array(256)
     const dwSize = [exeName.length] as [number]
     const executable =
@@ -205,7 +217,7 @@ const trackActiveWindow_Windows = (
       throw new Error(`Failed to get executable name for PID: ${pid}`)
     }
 
-    // Close process handle
+    // Close the process handle
     CloseHandle(processHandle)
 
     return {
@@ -213,18 +225,18 @@ const trackActiveWindow_Windows = (
       executable
     }
   } catch (error) {
-    const errorMessage = `Error getting active window info: ${error}`
-    console.error(errorMessage)
-
+    console.error(`Error getting active window info: ${error}`)
     return undefined
   }
 }
 
+// Function to track the active window on macOS (not implemented)
 const trackActiveWindow_Mac = (): undefined => {
   throw new Error('OS still under development')
-  //TODO to be implemented
+  // TODO: To be implemented
 }
 
+// Function to track the active window on Linux
 const trackActiveWindow_Linux = (): Omit<ActiveWindowInfoOnly, 'interactive'> | undefined => {
   try {
     // Attempt to get the active window ID using xprop
@@ -247,17 +259,14 @@ const trackActiveWindow_Linux = (): Omit<ActiveWindowInfoOnly, 'interactive'> | 
       executable = execSync(`ps -p ${pid} -o comm=`).toString().trim()
     }
 
-    if (
-      !title ||
-      !pid
-    ) {
+    if (!title || !pid) {
+      // Fallback to xwininfo if xprop fails
       const xwininfoOutput = execSync('xwininfo -root -tree').toString()
       const match = xwininfoOutput.match(/0x[0-9a-fA-F]+/)
 
       if (match) {
         windowId = match[0]
 
-        // Use xwininfo to get additional details if xprop fails
         const xwininfoDetails = execSync(`xwininfo -id ${windowId}`).toString()
 
         const titleMatch = xwininfoDetails.match(/xwininfo: Window id: .* "(.*)"/)
@@ -269,17 +278,18 @@ const trackActiveWindow_Linux = (): Omit<ActiveWindowInfoOnly, 'interactive'> | 
         executable = pid ? execSync(`ps -p ${pid} -o comm=`).toString().trim() : ''
       }
     }
+
     return {
       title,
       executable
     }
   } catch (error) {
-    const errorMessage = 'Error getting active window info: ' + error
-    console.error(errorMessage)
+    console.error('Error getting active window info: ' + error)
     return undefined
   }
 }
 
+// Export the Tracker object with the defined functions
 export const Tracker = {
   resetForOs,
   prepForOs,
