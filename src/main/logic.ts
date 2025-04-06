@@ -55,7 +55,6 @@ export const startSession = async (args: {
           start: previousActivity ? previousActivity.end : DateTime.now().toMillis(),
           end: DateTime.now().toMillis(),
           details: {
-            // className: tracking.className,
             interactive: tracking.interactive,
             title: tracking.title,
             executable: tracking.executable

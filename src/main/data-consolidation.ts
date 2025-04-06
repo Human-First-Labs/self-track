@@ -11,7 +11,6 @@ export const rawPath = basePath + '/raw'
 
 let currentFile = ``
 
-//commented classname after title
 const csvHeader = 'id,title,executable,interactive,start,end\n'
 
 const createDirectories = (): void => {
@@ -27,7 +26,6 @@ const createDirectories = (): void => {
 const convertActivityToCSV = (data: ActivityPeriod): string => {
   let dataString = ''
 
-  //commented ${data.details.className}
   dataString += `${data.id},${data.details.title},${data.details.executable},${data.details.interactive},${DateTime.fromMillis(data.start).toISO()},${DateTime.fromMillis(data.end).toISO()}\n`
 
   return dataString
@@ -61,7 +59,6 @@ const updateLastLine = (data: ActivityPeriod): void => {
       parsed.push({
         id: currentData.id,
         details: {
-          // className: currentData.className,
           title: currentData.title,
           executable: currentData.executable,
           interactive: currentData.interactive
@@ -107,7 +104,6 @@ const loadCSV = (filePath: string): Promise<ActivityPeriod[]> => {
         parsed.push({
           id: currentData.id,
           details: {
-            // className: currentData.className,
             title: currentData.title,
             executable: currentData.executable,
             interactive: currentData.interactive

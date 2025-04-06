@@ -7,7 +7,6 @@ import { basePath, DataWriter } from './data-consolidation'
 import { RendererToMainChannel, MainToRendererChannel } from './events'
 import { PermissionChecker, PermissionChecks } from './permission-checker'
 import os from 'os'
-// import { ElevatePrivileges } from './admin-privilages'
 
 let mainWindow: BrowserWindow
 let permissionChecks: PermissionChecks

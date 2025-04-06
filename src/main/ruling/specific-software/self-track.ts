@@ -9,11 +9,9 @@ const getProjectName = (): string => {
 }
 
 const program = 'Self Track (Me :D!)'
-// const classNames = ['self-track']
 
 export const selfTrackRules: RuleSet[] = [
   {
-    // classNames,
     executableNames: ['self-track'],
     os: 'linux',
     getDetails,
@@ -21,7 +19,6 @@ export const selfTrackRules: RuleSet[] = [
     program
   },
   {
-    // classNames,
     executableNames: ['self-track.exe'],
     os: 'win32',
     getDetails,

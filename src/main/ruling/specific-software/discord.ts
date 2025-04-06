@@ -14,7 +14,6 @@ const program = 'Discord'
 
 export const discordRules: RuleSet[] = [
   {
-    // classNames,
     executableNames: ['discord'],
     os: 'linux',
     getDetails,
@@ -22,7 +21,6 @@ export const discordRules: RuleSet[] = [
     program
   },
   {
-    // classNames,
     executableNames: ['Discord.exe'],
     os: 'win32',
     getDetails,

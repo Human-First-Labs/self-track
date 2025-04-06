@@ -1,44 +1,56 @@
 <script lang="ts">
-  import './toolkit/default-hfl.css'
-  import Footer from './Footer.svelte'
-  import type { ActivityPeriod } from '../../main/entities'
-  import { slide } from 'svelte/transition'
-  import { DateTime } from 'luxon'
-  import { onMount } from 'svelte'
+  // Importing necessary styles, components, and libraries
+  import './toolkit/default-hfl.css' // Default CSS styles
+  import Footer from './Footer.svelte' // Footer component
+  import type { ActivityPeriod } from '../../main/entities' // Type definition for ActivityPeriod
+  import { slide } from 'svelte/transition' // Svelte transition for animations
+  import { DateTime } from 'luxon' // Luxon library for date and time manipulation
+  import { onMount } from 'svelte' // Svelte lifecycle function
 
-  let currentActivity = $state<ActivityPeriod | undefined>()
-  let recording = $state(false)
-  let errorMessage = $state('')
+  // Reactive state variables
+  let currentActivity = $state<ActivityPeriod | undefined>() // Tracks the current activity
+  let recording = $state(false) // Tracks whether recording is active
+  let errorMessage = $state('') // Stores any error messages
+  let os = $state('') // Stores the detected operating system
 
-  let os = $state('')
-
+  // Lifecycle function that runs when the component is mounted
   onMount(() => {
+    // Listen for the OS information from the main process
     window.api.sendOS((_, currentOs) => {
-      os = currentOs
-    })
-    window.api.sendWindowInfo((_, windowInfo) => {
-      currentActivity = windowInfo
-      errorMessage = ''
-    })
-    window.api.sendTrackingError((_, error) => {
-      errorMessage = error
+      os = currentOs // Update the OS state
     })
 
+    // Listen for window information updates
+    window.api.sendWindowInfo((_, windowInfo) => {
+      currentActivity = windowInfo // Update the current activity
+      errorMessage = '' // Clear any previous error messages
+    })
+
+    // Listen for tracking errors
+    window.api.sendTrackingError((_, error) => {
+      errorMessage = error // Update the error message
+    })
+
+    // Request the OS information from the main process
     window.api.requestOs()
   })
 
+  // Function to toggle the recording state
   const toggleRecording = (): void => {
-    recording = !recording
+    recording = !recording // Toggle the recording state
 
     if (!recording) {
+      // Stop tracking if recording is turned off
       window.api.stopTracking()
     } else {
+      // Start tracking if recording is turned on
       window.api.startTracking()
     }
   }
 
+  // Function to open the exports directory
   const openDirectory = (): void => {
-    window.api.openExportsDirectory()
+    window.api.openExportsDirectory() // Trigger the main process to open the directory
   }
 </script>
 

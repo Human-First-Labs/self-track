@@ -12,7 +12,6 @@ const program = 'Windows Explorer'
 
 export const windowExplorerRules: RuleSet[] = [
   {
-    // classNames,
     executableNames: ['explorer.exe'],
     os: 'win32',
     getDetails,

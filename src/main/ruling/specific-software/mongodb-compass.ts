@@ -19,12 +19,10 @@ const getProjectName = (info: ActivityPeriod): string => {
 }
 
 const program = 'MongoDB Compass'
-// const classNames = ['mongodb compass']
 
 
 export const mongoDbCompassRules: RuleSet[] = [
   {
-    // classNames,
     executableNames: ['MongoDB Compass'],
     os: 'linux',
     getDetails,
@@ -32,7 +30,6 @@ export const mongoDbCompassRules: RuleSet[] = [
     program
   },
   {
-    // classNames,
     executableNames: ['MongoDBCompass.exe'],
     os: 'win32',
     getDetails,

@@ -4,7 +4,6 @@ export const SupportedOSList: SupportedOS[] = ['win32', 'linux']
 export interface ActiveWindowInfoOnly {
   title: string
   executable: string
-  // className: string
   interactive: 'active' | 'inactive' | 'unknown'
 }
 
@@ -52,7 +51,6 @@ export interface FinalReport {
 }
 
 export interface RuleSet {
-  // classNames: string[]
   executableNames: string[]
   os: SupportedOS
   program: string

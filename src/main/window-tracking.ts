@@ -10,7 +10,6 @@ interface WindowsPrepWork {
   GetForegroundWindow: KoffiFunction
   GetWindowThreadProcessId: KoffiFunction
   GetWindowText: KoffiFunction
-  // GetClassName: KoffiFunction
   OpenProcess: KoffiFunction
   QueryFullProcessImageName: KoffiFunction
   CloseHandle: KoffiFunction
@@ -81,8 +80,6 @@ const prepForOs_Windows = (): WindowsPrepWork => {
 
   const GetWindowText = user32Function('GetWindowTextW', cINT, [cHWND, out(cLPWSTR), cINT])
 
-  // const GetClassName = user32Function('GetClassNameW', cINT, [cHWND, out(cLPWSTR), cINT])
-
   const OpenProcess = kernel32Function('OpenProcess', cHANDLE, [cDWORD, cBOOL, cDWORD])
 
   const QueryFullProcessImageName = kernel32Function('QueryFullProcessImageNameW', cBOOL, [
@@ -98,7 +95,6 @@ const prepForOs_Windows = (): WindowsPrepWork => {
     GetForegroundWindow,
     GetWindowThreadProcessId,
     GetWindowText,
-    // GetClassName,
     OpenProcess,
     QueryFullProcessImageName,
     CloseHandle
@@ -160,7 +156,6 @@ const trackActiveWindow_Windows = (
     GetForegroundWindow,
     GetWindowThreadProcessId,
     GetWindowText,
-    // GetClassName,
     OpenProcess,
     QueryFullProcessImageName,
     CloseHandle
@@ -190,11 +185,6 @@ const trackActiveWindow_Windows = (
     GetWindowThreadProcessId(hwnd, out2)
     const pid = out2[0]
 
-    // Get window class name
-    // const out3 = new Uint16Array(512)
-    // const len2 = GetClassName(hwnd, out3, 512)
-    // const className = textDecoder.decode(out3).slice(0, len2)
-
     // Open the process
     const processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, pid)
     if (!processHandle) {
@@ -219,7 +209,6 @@ const trackActiveWindow_Windows = (
     CloseHandle(processHandle)
 
     return {
-      // className,
       title,
       executable
     }
@@ -241,7 +230,6 @@ const trackActiveWindow_Linux = (): Omit<ActiveWindowInfoOnly, 'interactive'> | 
     // Attempt to get the active window ID using xprop
     let windowId = execSync("xprop -root _NET_ACTIVE_WINDOW | awk '{print $5}'").toString().trim()
     let title = ''
-    // let className = ''
     let pid = ''
     let executable = ''
 
@@ -255,16 +243,12 @@ const trackActiveWindow_Linux = (): Omit<ActiveWindowInfoOnly, 'interactive'> | 
         title = execSync(`xprop -id ${windowId} WM_NAME | awk -F\\" '{print $2}'`).toString().trim()
       }
 
-      // className = execSync(`xprop -id ${windowId} WM_CLASS | awk -F\\" '{print $2}'`)
-      //   .toString()
-      //   .trim()
       pid = execSync(`xprop -id ${windowId} _NET_WM_PID | awk '{print $3}'`).toString().trim()
       executable = execSync(`ps -p ${pid} -o comm=`).toString().trim()
     }
 
     if (
       !title ||
-      // || !className
       !pid
     ) {
       const xwininfoOutput = execSync('xwininfo -root -tree').toString()
@@ -275,13 +259,9 @@ const trackActiveWindow_Linux = (): Omit<ActiveWindowInfoOnly, 'interactive'> | 
 
         // Use xwininfo to get additional details if xprop fails
         const xwininfoDetails = execSync(`xwininfo -id ${windowId}`).toString()
-        // console.log('xwininfoDetails:', xwininfoDetails)
 
         const titleMatch = xwininfoDetails.match(/xwininfo: Window id: .* "(.*)"/)
         title = titleMatch ? titleMatch[1] : ''
-
-        // const classNameMatch = xwininfoDetails.match(/Class: (.*)/)
-        // className = classNameMatch ? classNameMatch[1] : ''
 
         const pidMatch = xwininfoDetails.match(/Process id: (\d+)/)
         pid = pidMatch ? pidMatch[1] : ''
@@ -292,7 +272,6 @@ const trackActiveWindow_Linux = (): Omit<ActiveWindowInfoOnly, 'interactive'> | 
     return {
       title,
       executable
-      // className
     }
   } catch (error) {
     const errorMessage = 'Error getting active window info: ' + error
