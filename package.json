@@ -33,7 +33,7 @@
     "exceljs": "^4.4.0",
     "koffi": "2.10.1",
     "luxon": "3.6.1",
-    "node-desktop-idle-v2": "0.0.17",
+    "node-desktop-idle-v2": "0.0.18",
     "uuid": "11.1.0"
   },
   "devDependencies": {

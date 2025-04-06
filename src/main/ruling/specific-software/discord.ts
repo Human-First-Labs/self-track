@@ -1,9 +1,9 @@
 import { ActivityPeriod, RuleSet } from '../../entities'
 
 const getDetails = (info: ActivityPeriod): string => {
-    let cleanedTitle = info.details.title
-    cleanedTitle = cleanedTitle.replace(' - Discord', '')
-    return cleanedTitle
+  let cleanedTitle = info.details.title
+  cleanedTitle = cleanedTitle.replace(' - Discord', '')
+  return cleanedTitle
 }
 
 const getProjectName = (): string => {

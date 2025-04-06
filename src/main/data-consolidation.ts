@@ -13,12 +13,12 @@ export const rawPath = basePath + '/raw'
 export const reportPath = basePath + '/reports'
 
 interface CurrentPath {
-  fullPath: string,
-  name:string
+  fullPath: string
+  name: string
 }
 
 // Variable to store the current file being written to
-let currentFile:CurrentPath | undefined  
+let currentFile: CurrentPath | undefined
 
 // Define the CSV header for activity data
 const csvHeader = 'id,title,executable,interactive,start,end\n'
@@ -115,7 +115,7 @@ const updateLastLine = (data: ActivityPeriod): void => {
         dataString += convertActivityToCSV(item)
       }
 
-      if(!currentFile){
+      if (!currentFile) {
         throw new Error('No file to update') // Throw an error if no file is open
       }
 

@@ -190,9 +190,11 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
   rawData.forEach((activity) => {
     const ruleSet =
       ruleSets.find((ruleSet) => {
-        return ruleSet.executableNames.some((executableName) =>
-          activity.details.executable.includes(executableName)
-        ) && ruleSet.os === os.platform()
+        return (
+          ruleSet.executableNames.some((executableName) =>
+            activity.details.executable.includes(executableName)
+          ) && ruleSet.os === os.platform()
+        )
       }) ||
       ruleSets.find((ruleSet) => {
         return ruleSet.executableNames.length === 0 && ruleSet.os === os.platform()
@@ -346,8 +348,8 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
 
 // Function to generate a final Excel report from the processed data
 const generateFinalExcelReport = async (data: FinalReport, rawName: string): Promise<void> => {
-  const workbook = new ExcelJS.Workbook(); // Create a new workbook
-  const worksheet = workbook.addWorksheet('Activity Data'); // Add a worksheet
+  const workbook = new ExcelJS.Workbook() // Create a new workbook
+  const worksheet = workbook.addWorksheet('Activity Data') // Add a worksheet
 
   // Add headers to the worksheet
   worksheet.columns = [
@@ -358,24 +360,24 @@ const generateFinalExcelReport = async (data: FinalReport, rawName: string): Pro
     { header: 'End Date', key: 'endDate', width: 20 },
     { header: 'Duration', key: 'duration', width: 25 },
     { header: 'Details', key: 'details', width: 40 },
-    { header: 'Interactive', key: 'interactive', width: 15 },
+    { header: 'Interactive', key: 'interactive', width: 15 }
   ]
 
   // Loop through the activities and add rows to the worksheet
-  data.activities.forEach((activity: any) => {
-    activity.projectPeriods.forEach((projectPeriod: any) => {
-      projectPeriod.periods.forEach((period: any) => {
+  data.activities.forEach((activity) => {
+    activity.projectPeriods.forEach((projectPeriod) => {
+      projectPeriod.periods.forEach((period) => {
         worksheet.addRow({
-          program: activity.program,
-          executable: activity.executable,
+          program: activity.program + '\n' + activity.executable,
           project: projectPeriod.project || 'N/A',
           startDate: period.startDate,
           endDate: period.endDate,
           duration: period.duration,
           details: period.details,
-          interactive: period.interactive,
+          interactive: period.interactive
         })
       })
+      worksheet.addRow({})
     })
   })
 
