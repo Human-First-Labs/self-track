@@ -1,10 +1,10 @@
 {
   "name": "self-track",
-  "version": "0.3.0",
-  "description": "An Electron application with Svelte and TypeScript",
+  "version": "1.0.0",
+  "description": "An open source self-tracking application for macOS, Windows, and Linux.",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "Human First Labs (HFL)",
+  "homepage": "https://human-first-labs.com/self-track",
   "repository": "https://github.com/MomoRazor/self-track",
   "scripts": {
     "format": "prettier --plugin prettier-plugin-svelte --write .",
