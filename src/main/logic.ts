@@ -1,5 +1,11 @@
 import os from 'os'
-import { ActiveWindowInfo, ActivityPeriod, SupportedOS, SupportedOSList } from './entities'
+import {
+  ActiveWindowInfo,
+  ActivityPeriod,
+  FinalReport,
+  SupportedOS,
+  SupportedOSList
+} from './entities'
 import { Tracker } from './window-tracking'
 import { BrowserWindow } from 'electron'
 import { v4 as uuidv4 } from 'uuid'
@@ -10,6 +16,261 @@ import { MainToRendererChannel } from './events'
 import { PermissionChecks } from './permission-checker'
 import { DataProcessor } from './ruling'
 import fs from 'fs'
+
+//TODO to remove later
+const test: FinalReport = {
+  activities: [
+    {
+      program: 'Unknown Software',
+      executable:
+        'C:\\Users\\Maurovic Cachia\\Repo\\self-track\\node_modules\\electron\\dist\\electron.exe',
+      projectPeriods: [
+        {
+          project: '',
+          periods: [
+            {
+              startDate: '2025-04-06 12:20:47',
+              endDate: '2025-04-06 12:20:48',
+              duration: '0 hours, 0 minutes, 1 second',
+              details: 'Self Tracker',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:20:50',
+              endDate: '2025-04-06 12:20:51',
+              duration: '0 hours, 0 minutes, 1 second',
+              details: 'Self Tracker',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:21:31',
+              endDate: '2025-04-06 12:21:33',
+              duration: '0 hours, 0 minutes, 2 seconds',
+              details: 'Self Tracker',
+              interactive: 'active'
+            }
+          ],
+          totalDuration: '0 hours, 0 minutes, 4 seconds',
+          totalActiveDuration: '0 hours, 0 minutes, 4 seconds'
+        },
+
+        {
+          project: '2',
+          periods: [
+            {
+              startDate: '2025-04-06 12:20:47',
+              endDate: '2025-04-06 12:20:48',
+              duration: '0 hours, 0 minutes, 1 second',
+              details: 'Self Tracker',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:20:50',
+              endDate: '2025-04-06 12:20:51',
+              duration: '0 hours, 0 minutes, 1 second',
+              details: 'Self Tracker',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:21:31',
+              endDate: '2025-04-06 12:21:33',
+              duration: '0 hours, 0 minutes, 2 seconds',
+              details: 'Self Tracker',
+              interactive: 'active'
+            }
+          ],
+          totalDuration: '0 hours, 0 minutes, 4 seconds',
+          totalActiveDuration: '0 hours, 0 minutes, 4 seconds'
+        }
+      ],
+      totalDuration: '0 hours, 0 minutes, 8 seconds',
+      totalActiveDuration: '0 hours, 0 minutes, 8 seconds'
+    },
+    {
+      program: 'Visual Studio Code',
+      executable:
+        'C:\\Users\\Maurovic Cachia\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe',
+      projectPeriods: [
+        {
+          project: 'self-track',
+          periods: [
+            {
+              startDate: '2025-04-06 12:20:48',
+              endDate: '2025-04-06 12:20:50',
+              duration: '0 hours, 0 minutes, 2 seconds',
+              details: 'data-consolidation.ts',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:20:51',
+              endDate: '2025-04-06 12:20:53',
+              duration: '0 hours, 0 minutes, 2 seconds',
+              details: 'data-consolidation.ts',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:20:53',
+              endDate: '2025-04-06 12:21:03',
+              duration: '0 hours, 0 minutes, 10 seconds',
+              details: 'index.ts',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:21:04',
+              endDate: '2025-04-06 12:21:09',
+              duration: '0 hours, 0 minutes, 4 seconds',
+              details: 'index.ts',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:21:09',
+              endDate: '2025-04-06 12:21:26',
+              duration: '0 hours, 0 minutes, 17 seconds',
+              details: 'entities.ts',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:21:33',
+              endDate: '2025-04-06 12:21:37',
+              duration: '0 hours, 0 minutes, 4 seconds',
+              details: 'entities.ts',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:21:37',
+              endDate: '2025-04-06 12:21:44',
+              duration: '0 hours, 0 minutes, 7 seconds',
+              details: 'events.ts',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:21:44',
+              endDate: '2025-04-06 12:21:56',
+              duration: '0 hours, 0 minutes, 12 seconds',
+              details: 'index.ts',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:21:56',
+              endDate: '2025-04-06 12:22:11',
+              duration: '0 hours, 0 minutes, 15 seconds',
+              details: 'interaction-tracking.ts',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:22:11',
+              endDate: '2025-04-06 12:22:21',
+              duration: '0 hours, 0 minutes, 10 seconds',
+              details: 'logic.ts',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:22:21',
+              endDate: '2025-04-06 12:22:39',
+              duration: '0 hours, 0 minutes, 18 seconds',
+              details: 'permission-checker.ts',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:22:39',
+              endDate: '2025-04-06 12:22:51',
+              duration: '0 hours, 0 minutes, 12 seconds',
+              details: 'window-tracking.ts',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:22:51',
+              endDate: '2025-04-06 12:23:01',
+              duration: '0 hours, 0 minutes, 9 seconds',
+              details: 'chrome.ts',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:23:03',
+              endDate: '2025-04-06 12:23:06',
+              duration: '0 hours, 0 minutes, 3 seconds',
+              details: 'chrome.ts',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:23:06',
+              endDate: '2025-04-06 12:23:08',
+              duration: '0 hours, 0 minutes, 2 seconds',
+              details: 'default.ts',
+              interactive: 'active'
+            }
+          ],
+          totalDuration: '0 hours, 2 minutes, 8 seconds',
+          totalActiveDuration: '0 hours, 2 minutes, 8 seconds'
+        }
+      ],
+      totalDuration: '0 hours, 2 minutes, 8 seconds',
+      totalActiveDuration: '0 hours, 2 minutes, 8 seconds'
+    },
+    {
+      program: 'Google Chrome',
+      executable: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      projectPeriods: [
+        {
+          project: '',
+          periods: [
+            {
+              startDate: '2025-04-06 12:21:03',
+              endDate: '2025-04-06 12:21:04',
+              duration: '0 hours, 0 minutes, 1 second',
+              details: 'Hardly Working: Gale Beggy - YouTube',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:23:01',
+              endDate: '2025-04-06 12:23:03',
+              duration: '0 hours, 0 minutes, 2 seconds',
+              details: "Hardly Working: Ricky's Diary - YouTube",
+              interactive: 'active'
+            }
+          ],
+          totalDuration: '0 hours, 0 minutes, 3 seconds',
+          totalActiveDuration: '0 hours, 0 minutes, 3 seconds'
+        }
+      ],
+      totalDuration: '0 hours, 0 minutes, 3 seconds',
+      totalActiveDuration: '0 hours, 0 minutes, 3 seconds'
+    },
+    {
+      program: 'Windows Explorer',
+      executable: 'C:\\Windows\\explorer.exe',
+      projectPeriods: [
+        {
+          project: '',
+          periods: [
+            {
+              startDate: '2025-04-06 12:21:26',
+              endDate: '2025-04-06 12:21:29',
+              duration: '0 hours, 0 minutes, 3 seconds',
+              details: 'Home - File Explorer',
+              interactive: 'active'
+            },
+            {
+              startDate: '2025-04-06 12:21:29',
+              endDate: '2025-04-06 12:21:31',
+              duration: '0 hours, 0 minutes, 2 seconds',
+              details: 'exports - File Explorer',
+              interactive: 'active'
+            }
+          ],
+          totalDuration: '0 hours, 0 minutes, 5 seconds',
+          totalActiveDuration: '0 hours, 0 minutes, 5 seconds'
+        }
+      ],
+      totalDuration: '0 hours, 0 minutes, 5 seconds',
+      totalActiveDuration: '0 hours, 0 minutes, 5 seconds'
+    }
+  ],
+  totalDuration: '0 hours, 2 minutes, 20 seconds',
+  endDate: '2025-04-06 12:23:08',
+  startDate: '2025-04-06 12:20:47'
+}
+DataProcessor.generateFinalExcelReport(test, 'test.csv')
 
 // Variables to manage the tracking session
 let windowInterval: string | number | NodeJS.Timeout | undefined // Interval for tracking active windows

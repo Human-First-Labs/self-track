@@ -7,7 +7,7 @@ import {
 } from '../entities' // Importing types for activity and report structures
 import { ruleSets } from './rule-sets' // Rule sets for categorizing activities
 import os from 'os' // Module to detect the operating system
-import ExcelJS from 'exceljs' // Library for generating Excel files
+import ExcelJS, { Row } from 'exceljs' // Library for generating Excel files
 import { reportPath } from '../data-consolidation' // Path for storing reports
 
 // Extended interfaces to include duration in milliseconds for internal calculations
@@ -346,43 +346,271 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
   return convertFunctionalFunalReportToFinalReport(finalReport)
 }
 
+const programColor = '5983b0'
+const projectColor = '50938a'
+
 // Function to generate a final Excel report from the processed data
 const generateFinalExcelReport = async (data: FinalReport, rawName: string): Promise<void> => {
   const workbook = new ExcelJS.Workbook() // Create a new workbook
-  const worksheet = workbook.addWorksheet('Activity Data') // Add a worksheet
+  const worksheetTotals = workbook.addWorksheet('Totals') // Add a worksheet
+  const worksheetDetails = workbook.addWorksheet('Details') // Add a worksheet for details
 
   // Add headers to the worksheet
-  worksheet.columns = [
+  worksheetTotals.columns = [
     { header: 'Program', key: 'program', width: 30 },
-    { header: 'Executable', key: 'executable', width: 50 },
     { header: 'Project', key: 'project', width: 20 },
+    { header: 'Total', key: 'total', width: 20 },
+    { header: 'Value', key: 'value', width: 20 }
+  ]
+
+  worksheetDetails.columns = [
+    { header: 'Program', key: 'program', width: 30 },
+    { header: 'Project', key: 'project', width: 20 },
+    { header: 'Details', key: 'details', width: 40 },
+    { header: 'Interactive', key: 'interactive', width: 15 },
     { header: 'Start Date', key: 'startDate', width: 20 },
     { header: 'End Date', key: 'endDate', width: 20 },
-    { header: 'Duration', key: 'duration', width: 25 },
-    { header: 'Details', key: 'details', width: 40 },
-    { header: 'Interactive', key: 'interactive', width: 15 }
+    { header: 'Duration', key: 'duration', width: 25 }
   ]
+
+  let startDetailsRow = 1
+  let startTotalsRow = 1
 
   // Loop through the activities and add rows to the worksheet
   data.activities.forEach((activity) => {
-    activity.projectPeriods.forEach((projectPeriod) => {
-      projectPeriod.periods.forEach((period) => {
-        worksheet.addRow({
-          program: activity.program + '\n' + activity.executable,
-          project: projectPeriod.project || 'N/A',
-          startDate: period.startDate,
-          endDate: period.endDate,
-          duration: period.duration,
-          details: period.details,
-          interactive: period.interactive
-        })
-      })
-      worksheet.addRow({})
+    worksheetDetails.addRow({
+      program: activity.program
     })
+    const detailedStartProgram = startDetailsRow + 1
+    let detailedEndProgram = startDetailsRow + 1
+    worksheetDetails.getCell('A' + detailedStartProgram).style = {
+      //light blue
+      fill: {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: programColor }
+      },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' }
+      },
+      alignment: {
+        vertical: 'top'
+      }
+    }
+    worksheetDetails.mergeCells('B' + detailedStartProgram, 'G' + detailedStartProgram)
+    const horizontalCellDetails = worksheetDetails.getCell('B' + detailedStartProgram)
+    horizontalCellDetails.style = {
+      //light blue
+      fill: {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: programColor }
+      },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' }
+      }
+    }
+    horizontalCellDetails.value = activity.executable
+
+    worksheetTotals.addRow({
+      program: activity.program
+    })
+    const totalsStartProgram = startTotalsRow + 1
+    let totalsEndProgram = startTotalsRow + 1
+    worksheetTotals.getCell('A' + totalsStartProgram).style = {
+      //light blue
+      fill: {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: programColor }
+      },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' }
+      },
+      alignment: {
+        vertical: 'top'
+      }
+    }
+    worksheetTotals.mergeCells('B' + totalsStartProgram, 'D' + totalsStartProgram)
+    const horizontalCellTotals = worksheetTotals.getCell('B' + totalsStartProgram)
+    horizontalCellTotals.style = {
+      //light blue
+      fill: {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: programColor }
+      },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' }
+      }
+    }
+    horizontalCellTotals.value = activity.executable
+
+    activity.projectPeriods.forEach((projectPeriod) => {
+      const detailedStartProject = detailedEndProgram + 1
+      let detailedEndProject = detailedEndProgram + 1
+      worksheetDetails.addRow({
+        project: projectPeriod.project
+      })
+      worksheetDetails.mergeCells('C' + detailedStartProject, 'G' + detailedStartProject)
+      worksheetDetails.getCell('C' + detailedStartProject).style = {
+        //light green
+        fill: {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: projectColor }
+        },
+        border: {
+          top: { style: 'thin' },
+          bottom: { style: 'thin' },
+          left: { style: 'thin' },
+          right: { style: 'thin' }
+        },
+        alignment: {
+          vertical: 'top'
+        }
+      }
+      detailedEndProgram++
+
+      const totalsStartProject = totalsEndProgram + 1
+      let totalsEndProject = totalsEndProgram + 1
+      worksheetTotals.addRow({
+        project: projectPeriod.project
+      })
+      worksheetTotals.mergeCells('C' + totalsStartProject, 'D' + totalsStartProject)
+      worksheetTotals.getCell('C' + totalsStartProject).style = {
+        //light green
+        fill: {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: projectColor }
+        },
+        border: {
+          top: { style: 'thin' },
+          bottom: { style: 'thin' },
+          left: { style: 'thin' },
+          right: { style: 'thin' }
+        },
+        alignment: {
+          vertical: 'top'
+        }
+      }
+      totalsEndProgram++
+
+      const detailedRows: Row[] = []
+      projectPeriod.periods.forEach((period) => {
+        detailedRows.push(
+          worksheetDetails.addRow({
+            startDate: period.startDate,
+            endDate: period.endDate,
+            duration: period.duration,
+            details: period.details,
+            interactive: period.interactive
+          })
+        )
+        detailedEndProject++
+        detailedEndProgram++
+      })
+      worksheetDetails.mergeCells('B' + detailedStartProject, 'B' + detailedEndProject)
+      worksheetDetails.getCell('B' + detailedStartProject).style = {
+        //light green
+        fill: {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: projectColor }
+        },
+        border: {
+          top: { style: 'thin' },
+          bottom: { style: 'thin' },
+          left: { style: 'thin' },
+          right: { style: 'thin' }
+        },
+        alignment: {
+          vertical: 'top'
+        }
+      }
+
+      worksheetTotals.addRow({
+        total: 'Active Time',
+        value: projectPeriod.totalActiveDuration || 'N/A'
+      })
+      worksheetTotals.addRow({
+        total: 'Inactive Time',
+        value: projectPeriod.totalInactiveDuration || 'N/A'
+      })
+      worksheetTotals.addRow({
+        total: 'Total Time',
+        value: projectPeriod.totalDuration || 'N/A'
+      })
+      totalsEndProject += 3
+      totalsEndProgram += 3
+      worksheetTotals.mergeCells('B' + totalsStartProject, 'B' + totalsEndProject)
+      worksheetTotals.getCell('B' + totalsStartProject).style = {
+        //light green
+        fill: {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: projectColor }
+        },
+        border: {
+          top: { style: 'thin' },
+          bottom: { style: 'thin' },
+          left: { style: 'thin' },
+          right: { style: 'thin' }
+        },
+        alignment: {
+          vertical: 'top'
+        }
+      }
+    })
+    worksheetDetails.mergeCells('A' + detailedStartProgram, 'A' + detailedEndProgram)
+    worksheetTotals.addRow({
+      total: 'Active Time',
+      value: activity.totalActiveDuration || 'N/A'
+    })
+    worksheetTotals.addRow({
+      total: 'Inactive Time',
+      value: activity.totalInactiveDuration || 'N/A'
+    })
+    worksheetTotals.addRow({
+      total: 'Total Time',
+      value: activity.totalDuration || 'N/A'
+    })
+    totalsEndProgram += 3
+    worksheetTotals.mergeCells('A' + totalsStartProgram, 'A' + totalsEndProgram)
+    startDetailsRow = detailedEndProgram
+    startTotalsRow = totalsEndProgram
   })
 
+  worksheetTotals.addRow({
+    total: 'Active Time',
+    value: data.totalActiveDuration || 'N/A'
+  })
+  worksheetTotals.addRow({
+    total: 'Inactive Time',
+    value: data.totalInactiveDuration || 'N/A'
+  })
+  worksheetTotals.addRow({
+    total: 'Total Time',
+    value: data.totalDuration || 'N/A'
+  })
+
+  const cleanedExtension = rawName.split('.')[0]
+
   // Write the workbook to a file
-  await workbook.xlsx.writeFile(reportPath + `/activity_report_${rawName}.xlsx`) // Specify the output file path
+  await workbook.xlsx.writeFile(reportPath + `/activity_report_${cleanedExtension}.xlsx`) // Specify the output file path
 }
 
 // Export the DataProcessor object with the defined functions
