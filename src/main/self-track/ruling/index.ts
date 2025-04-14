@@ -8,7 +8,6 @@ import {
 import { ruleSets } from './rule-sets' // Rule sets for categorizing activities
 import os from 'os' // Module to detect the operating system
 import ExcelJS, { Row } from 'exceljs' // Library for generating Excel files
-import { reportPath } from '../data-consolidation' // Path for storing reports
 
 // Extended interfaces to include duration in milliseconds for internal calculations
 interface FunctionalFinalReportProjectActivity extends FinalReportProjectActivity {
@@ -29,14 +28,16 @@ interface FunctionalFinalReport extends FinalReport {
 }
 
 // Function to convert an internal functional report to the final report format
-const convertFunctionalFunalReportToFinalReport = (
+const convertFunctionalFinalReportToFinalReport = (
   functionalFinalReport: FunctionalFinalReport
 ): FinalReport => {
   const finalReport: FinalReport = {
     activities: [],
     totalDuration: functionalFinalReport.totalDuration,
     endDate: functionalFinalReport.endDate,
-    startDate: functionalFinalReport.startDate
+    startDate: functionalFinalReport.startDate,
+    totalActiveDuration: functionalFinalReport.totalActiveDuration,
+    totalInactiveDuration: functionalFinalReport.totalInactiveDuration
   }
 
   // Process each activity in the functional report
@@ -343,14 +344,20 @@ const processRawData = (rawData: ActivityPeriod[]): FinalReport => {
     }
   })
 
-  return convertFunctionalFunalReportToFinalReport(finalReport)
+  return convertFunctionalFinalReportToFinalReport(finalReport)
 }
 
 const programColor = '5983b0'
 const projectColor = '50938a'
 
 // Function to generate a final Excel report from the processed data
-const generateFinalExcelReport = async (data: FinalReport, rawName: string): Promise<void> => {
+const generateFinalExcelReport = async (args: {
+  data: FinalReport
+  rawName: string
+  reportPath: string
+}): Promise<void> => {
+  const { data, rawName, reportPath } = args
+
   const workbook = new ExcelJS.Workbook() // Create a new workbook
   const worksheetTotals = workbook.addWorksheet('Totals') // Add a worksheet
   const worksheetDetails = workbook.addWorksheet('Details') // Add a worksheet for details

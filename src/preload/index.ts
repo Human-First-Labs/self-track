@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { ActivityPeriod } from '../main/entities'
-import { MainToRendererChannel, RendererToMainChannel } from '../main/events'
+import { ActivityPeriod } from '../main/self-track/entities'
+import { MainToRendererChannel, RendererToMainChannel } from '../main/self-track/events'
 
 export type CustomAPI = {
   //Renderer to Main

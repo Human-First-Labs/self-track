@@ -2,11 +2,19 @@ import { app, shell, BrowserWindow, ipcMain, screen, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { startSession, endSession, detectOS } from './logic'
-import { basePath, DataWriter } from './data-consolidation'
-import { RendererToMainChannel, MainToRendererChannel } from './events'
-import { PermissionChecker, PermissionChecks } from './permission-checker'
+import { startSession, endSession, detectOS } from './flow'
+import { DataWriter } from './self-track/data-consolidation'
+import { RendererToMainChannel, MainToRendererChannel } from './self-track/events'
+import { PermissionChecker, PermissionChecks } from './self-track/permission-checker'
 import os from 'os'
+
+// Get the secure path for storing user data
+const securePath = app.getPath('userData')
+
+// Define base paths for storing exported data
+export const basePath = `${securePath}/exports`
+export const rawPath = basePath + '/raw'
+export const reportPath = basePath + '/reports'
 
 let mainWindow: BrowserWindow
 let permissionChecks: PermissionChecks
@@ -126,7 +134,10 @@ app.whenReady().then(() => {
     shell.openPath(basePath)
   })
 
-  DataWriter.createDirectories()
+  DataWriter.createDirectories({
+    rawPath,
+    reportPath
+  })
 
   createWindow()
 
