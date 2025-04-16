@@ -81,7 +81,7 @@ export const startSession = async (args: {
         }
 
         if (!currentFile) {
-          DataWriter.createFile({
+          currentFile = DataWriter.createFile({
             rawPath
           })
         }
