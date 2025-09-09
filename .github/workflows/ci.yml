@@ -86,7 +86,6 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
-    if: needs.build.outputs.version_changed == 'true'
     steps:
       - uses: actions/checkout@v4
 
