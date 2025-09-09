@@ -56,7 +56,7 @@ jobs:
 
       - name: Build executables
         if: steps.versioncheck.outputs.changed == 'true'
-        run: npm run build && npm run build-native
+        run: npm run build
 
       - name: Package app
         if: steps.versioncheck.outputs.changed == 'true'
