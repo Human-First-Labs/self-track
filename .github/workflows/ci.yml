@@ -2,8 +2,8 @@ name: Release Executables
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - main
 
 jobs:
   build:
@@ -15,30 +15,54 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get previous package.json
+        id: prevpkg
+        run: |
+          git fetch origin main --depth=2
+          git show HEAD^:package.json > old-package.json || echo '{}' > old-package.json
+
+      - name: Check if version changed
+        id: versioncheck
+        run: |
+          oldver=$(jq -r .version old-package.json)
+          newver=$(jq -r .version package.json)
+          echo "Old version: $oldver, New version: $newver"
+          if [ "$oldver" = "$newver" ]; then
+            echo "::set-output name=changed::false"
+          else
+            echo "::set-output name=changed::true"
+          fi
+        shell: bash
+
       - name: Set up Node.js
+        if: steps.versioncheck.outputs.changed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
       - name: Install dependencies
+        if: steps.versioncheck.outputs.changed == 'true'
         run: npm install
 
       - name: Install Linux dependencies
-        if: runner.os == 'Linux'
+        if: steps.versioncheck.outputs.changed == 'true' && runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libx11-dev libxss-dev libinput-dev libudev-dev
 
       - name: Add user to input group
-        if: runner.os == 'Linux'
+        if: steps.versioncheck.outputs.changed == 'true' && runner.os == 'Linux'
         run: sudo usermod -a -G input $USER
 
       - name: Build executables
+        if: steps.versioncheck.outputs.changed == 'true'
         run: npm run build && npm run build-native
 
       - name: Package app
+        if: steps.versioncheck.outputs.changed == 'true'
         run: |
           npx electron-builder --${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'macos-latest' && 'mac' || 'win' }}
 
       - name: Upload artifact
+        if: steps.versioncheck.outputs.changed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: self-track-${{ matrix.os }}
