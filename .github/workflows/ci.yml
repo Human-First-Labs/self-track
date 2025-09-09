@@ -28,9 +28,9 @@ jobs:
           newver=$(jq -r .version package.json)
           echo "Old version: $oldver, New version: $newver"
           if [ "$oldver" = "$newver" ]; then
-            echo "::set-output name=changed::false"
+            echo "changed=false" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=changed::true"
+            echo "changed=true" >> $GITHUB_OUTPUT
           fi
         shell: bash
 
