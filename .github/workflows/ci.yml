@@ -95,6 +95,7 @@ jobs:
       - name: Check for executables to upload
         id: check_upload
         run: |
+          mkdir -p ./release-assets
           count=$(find ./release-assets -maxdepth 1 -name 'self-track-*' | wc -l)
           echo "Found $count executables to upload"
           if [ "$count" -eq 0 ]; then
@@ -127,6 +128,7 @@ jobs:
       - name: Check for executables
         id: check_exec
         run: |
+          mkdir -p ./release-assets
           count=$(find ./release-assets -maxdepth 1 -name 'self-track-*' | wc -l)
           echo "Found $count executables"
           if [ "$count" -eq 0 ]; then
