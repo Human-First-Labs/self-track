@@ -83,8 +83,23 @@ jobs:
           path: |
             dist/self-track-*
 
-  release:
+  collect-artifacts:
     needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all executables
+        uses: actions/download-artifact@v4
+        with:
+          path: ./release-assets
+          merge-multiple: true
+      - name: Upload all executables for release
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-executables
+          path: ./release-assets/self-track-*
+
+  release:
+    needs: collect-artifacts
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -92,13 +107,28 @@ jobs:
       - name: Download all executables
         uses: actions/download-artifact@v4
         with:
+          name: all-executables
           path: ./release-assets
 
+      - name: Check for executables
+        id: check_exec
+        run: |
+          count=$(ls ./release-assets/self-track-* 2>/dev/null | wc -l)
+          echo "Found $count executables"
+          if [ "$count" -eq 0 ]; then
+            echo "::set-output name=found::false"
+          else
+            echo "::set-output name=found::true"
+          fi
+        shell: bash
+
       - name: Zip source code
+        if: steps.check_exec.outputs.found == 'true'
         run: |
           git archive --format zip --output self-track-source.zip HEAD
 
       - name: Create GitHub Release
+        if: steps.check_exec.outputs.found == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}-${{ github.sha }}
@@ -106,5 +136,5 @@ jobs:
           body: |
             Automated release for version bump in package.json.
           files: |
-            release-assets/**/self-track-*
+            release-assets/self-track-*
             self-track-source.zip
