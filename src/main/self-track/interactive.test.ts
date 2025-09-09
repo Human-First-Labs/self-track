@@ -28,7 +28,7 @@ describe('esm test', () => {
           } else {
             console.error(`✗ Invalid idle time: ${idle} (expected non-negative number)`)
           }
-        } catch (error) {
+        } catch (error: Error | any) {
           console.error(`✗ Error getting idle time: ${error.message}`)
         }
       }, 1000)
@@ -56,7 +56,7 @@ describe('esm test', () => {
       console.log(`  - Success rate: ${successRate.toFixed(1)}%`)
 
       process.exit(0)
-    } catch (error) {
+    } catch (error: Error | any) {
       console.error(`\n✗ Test failed: ${error.message}`)
       console.error(error.stack)
       process.exit(1)
