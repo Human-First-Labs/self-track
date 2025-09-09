@@ -92,7 +92,19 @@ jobs:
         with:
           path: ./release-assets
           merge-multiple: true
+      - name: Check for executables to upload
+        id: check_upload
+        run: |
+          count=$(ls ./release-assets/self-track-* 2>/dev/null | wc -l)
+          echo "Found $count executables to upload"
+          if [ "$count" -eq 0 ]; then
+            echo "::set-output name=found::false"
+          else
+            echo "::set-output name=found::true"
+          fi
+        shell: bash
       - name: Upload all executables for release
+        if: steps.check_upload.outputs.found == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: all-executables
@@ -105,6 +117,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Download all executables
+        id: download_exec
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: all-executables
