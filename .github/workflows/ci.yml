@@ -144,6 +144,8 @@ jobs:
           git archive --format zip --output self-track-source.zip HEAD
 
       - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         if: steps.check_exec.outputs.found == 'true'
         uses: softprops/action-gh-release@v2
         with:
