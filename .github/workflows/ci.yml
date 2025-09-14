@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -126,9 +128,6 @@ jobs:
         with:
           name: all-executables
           path: ./release-assets
-
-          env:
-            GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Check for executables
         id: check_exec
         run: |
