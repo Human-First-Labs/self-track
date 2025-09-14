@@ -127,6 +127,8 @@ jobs:
           name: all-executables
           path: ./release-assets
 
+          env:
+            GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Check for executables
         id: check_exec
         run: |
