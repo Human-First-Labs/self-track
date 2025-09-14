@@ -147,7 +147,7 @@ jobs:
         if: steps.check_exec.outputs.found == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
           tag_name: v${{ github.run_number }}-${{ github.sha }}
           name: Release v${{ github.run_number }}
           body: |
