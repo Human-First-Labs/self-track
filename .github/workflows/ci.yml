@@ -114,6 +114,8 @@ jobs:
   release:
     needs: collect-artifacts
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -144,8 +146,6 @@ jobs:
           git archive --format zip --output self-track-source.zip HEAD
 
       - name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         if: steps.check_exec.outputs.found == 'true'
         uses: softprops/action-gh-release@v2
         with:
