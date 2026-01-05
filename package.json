@@ -1,6 +1,6 @@
 {
   "name": "self-track",
-  "version": "1.1.13",
+  "version": "1.1.14",
   "description": "An open source self-tracking application for macOS, Windows, and Linux.",
   "main": "./out/main/index.js",
   "author": "Human First Labs (HFL)",
@@ -34,7 +34,7 @@
     "exceljs": "4.4.0",
     "koffi": "2.15.0",
     "luxon": "3.7.2",
-    "node-desktop-idle-v2": "1.1.18",
+    "node-desktop-idle-v2": "1.1.19",
     "ts-jest": "29.4.6",
     "uuid": "13.0.0"
   },
