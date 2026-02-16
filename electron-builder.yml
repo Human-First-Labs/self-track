@@ -38,4 +38,4 @@ linux:
 appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
-publish: ["github"]
+publish: ['github']
