@@ -35,7 +35,7 @@ Of course there are positives and negatives to this approach, and I will outline
 
 ## How to use
 
-First, you must navigate to releases (https://github.com/MomoRazor/self-track/releases),and download the appropriate file for your system.
+First, you must navigate to releases (https://github.com/MomoRazor/self-track/releases), and download the appropriate file for your system.
 
 If you want to use Self-Track on Windows, download the .exe file, while if you are on a linux distribution, download the .deb file. After the download is concluded, run file, which should install Self-Track on your system.
 
