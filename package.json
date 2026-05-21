@@ -1,6 +1,6 @@
 {
   "name": "self-track",
-  "version": "1.1.20",
+  "version": "1.1.21",
   "description": "An open source self-tracking application for macOS, Windows, and Linux.",
   "main": "./out/main/index.js",
   "author": "Human First Labs (HFL)",
@@ -29,13 +29,13 @@
   "dependencies": {
     "@electron-toolkit/preload": "3.0.2",
     "@electron-toolkit/utils": "4.0.0",
-    "csv-parser": "3.2.0",
+    "csv-parser": "3.2.1",
     "electron-updater": "6.8.3",
     "exceljs": "4.4.0",
-    "koffi": "2.16.1",
+    "koffi": "3.0.1",
     "luxon": "3.7.2",
-    "node-desktop-idle-v2": "1.1.25",
-    "ts-jest": "29.4.9",
+    "node-desktop-idle-v2": "1.1.26",
+    "ts-jest": "29.4.11",
     "uuid": "14.0.0"
   },
   "devDependencies": {

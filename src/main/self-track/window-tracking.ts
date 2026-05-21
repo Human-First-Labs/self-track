@@ -57,7 +57,7 @@ const prepForOs = (): WindowsPrepWork | undefined => {
 const prepForOs_Windows = (): WindowsPrepWork => {
   // Define Windows-specific types
   const cHWND = pointer('HWND', opaque())
-  type HANDLE<Kind extends string> = koffi.IKoffiCType & { __kind: Kind }
+  type HANDLE<Kind extends string> = koffi.TypeObject & { __kind: Kind }
   type HWND = HANDLE<'HWND'>
   const cDWORD = koffi.types.uint32
   const cLPDWORD = pointer('LPDWORD', koffi.types.uint32)
